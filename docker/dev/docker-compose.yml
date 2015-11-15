@@ -1,0 +1,49 @@
+test:
+  build: .
+  links:
+    - db
+  volumes_from:
+    - cache
+  volumes:
+    - ../../src:/application
+  environment:
+    DJANGO_SETTINGS_MODULE: todobackend.settings.test
+    MYSQL_HOST: db
+    MYSQL_USER: root
+    MYSQL_PASSWORD: password
+    NOSE_INCLUDE_EXE: 1
+
+db:
+  image: mysql
+  hostname: db
+  expose:
+    - "3306"
+  environment:
+    MYSQL_ROOT_PASSWORD: password
+
+cache:
+  build: .
+  volumes:
+    - /tmp/cache:/cache
+  entrypoint: "true"
+
+# FOO environment variable?? - see https://github.com/docker/docker/issues/14203
+agent:
+  build: ../agent/
+  links:
+    - db
+  volumes:
+    - ../../ansible/probe:/ansible
+  environment:
+    PROBE_HOST: "db"
+    PROBE_PORT: "3306"
+
+builder:
+  build: .
+  volumes:
+    - ../../src:/application
+    - ../release/target:/wheelhouse
+  volumes_from:
+    - cache
+  entrypoint: "entrypoint.sh"
+  command: ["pip", "wheel", "."]
