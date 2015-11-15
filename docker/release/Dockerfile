@@ -1,4 +1,4 @@
-FROM pluralsight/todobackend-base:latest
+FROM cloudhotspot/todobackend-base:latest
 MAINTAINER Justin Menga <justin.menga@gmail.com>
 
 ADD target /wheelhouse

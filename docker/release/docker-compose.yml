@@ -41,7 +41,7 @@ static:
   entrypoint: "true"
 
 test:
-  image: pluralsight/todobackend-specs
+  image: cloudhotspot/todobackend-specs
   links:
     - app
   environment:

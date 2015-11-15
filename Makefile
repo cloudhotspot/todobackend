@@ -40,7 +40,7 @@ clean:
 
 compose:
 	${INFO} "Running docker-compose command..."
-	@ docker-compose -p todobackend -f docker/release/docker-compose.yml $(COMPOSE_ARGS)
+	docker-compose -p todobackend -f docker/release/docker-compose.yml $(COMPOSE_ARGS)
 
 # Cosmetics
 YELLOW = "\033[1;33m"
