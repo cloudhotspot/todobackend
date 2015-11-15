@@ -9,7 +9,7 @@ NOSE_ARGS = [
   '--nologcapture',        # don't output log capture
   '--with-coverage',       # activate coverage report
   '--cover-package=todo',  # coverage reports will apply to these packages
-  '--with-spec',
+  '--with-spec',           # Spec style tests
   '--spec-color',
 ]
 
