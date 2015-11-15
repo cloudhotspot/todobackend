@@ -1,0 +1,48 @@
+app:
+  build: .
+  links:
+    - db
+  ports:
+    - 8000:8000
+  volumes_from:
+    - static
+  command: uwsgi --http :8000 --module todobackend.wsgi --master --static-map /static=/var/www/todobackend/static 
+  environment:
+    DJANGO_SETTINGS_MODULE: todobackend.settings.release
+    MYSQL_HOST: db
+    MYSQL_USER: todo
+    MYSQL_PASSWORD: password
+
+db:
+  image: mysql
+  hostname: db
+  expose:
+    - "3306"
+  environment:
+    MYSQL_DATABASE: todobackend
+    MYSQL_USER: todo
+    MYSQL_PASSWORD: password
+    MYSQL_ROOT_PASSWORD: password
+
+agent:
+  build: ../agent/
+  links:
+    - db
+  volumes:
+    - ../../ansible/probe:/ansible
+  environment:
+    PROBE_HOST: "db"
+    PROBE_PORT: "3306"
+
+static:
+  build: .
+  volumes:
+    - /var/www/todobackend/
+  entrypoint: "true"
+
+test:
+  image: pluralsight/todobackend-specs
+  links:
+    - app
+  environment:
+    URL: http://app:8000/todos
