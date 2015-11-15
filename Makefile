@@ -1,4 +1,4 @@
-.PHONY: test build release clean 
+.PHONY: test build release clean compose
 
 test:
 	${INFO} "Building images..."
@@ -38,6 +38,10 @@ clean:
 	@ docker images -q --filter "dangling=true" | xargs -I ARGS docker rmi ARGS
 	${INFO} "Clean complete"
 
+compose:
+	${INFO} "Running docker-compose command..."
+	@ docker-compose -p todobackend -f docker/release/docker-compose.yml $(COMPOSE_ARGS)
+
 # Cosmetics
 YELLOW = "\033[1;33m"
 NC = "\033[0m"
@@ -47,3 +51,9 @@ INFO=@sh -c '\
   printf $(YELLOW); \
   echo "=> $$1"; \
   printf $(NC)' INFO
+
+# Extract run arguments
+ifeq (compose,$(firstword $(MAKECMDGOALS)))
+  COMPOSE_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  $(eval $(COMPOSE_ARGS):;@:)
+endif
