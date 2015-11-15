@@ -8,7 +8,6 @@ def createItem(client):
   data = {'title': 'Walk the dog'}
   return client.post(url, data, format='json')
 
-
 class TestCreateTodoItem(APITestCase):
   """
   Ensure we can create a new todo item
@@ -28,7 +27,6 @@ class TestCreateTodoItem(APITestCase):
   def test_item_has_correct_title(self):
     self.assertEqual(TodoItem.objects.get().title, 'Walk the dog')
 
-
 class TestUpdateTodoItem(APITestCase):
   """
   Ensure we can update an existing todo item using PUT
@@ -46,7 +44,6 @@ class TestUpdateTodoItem(APITestCase):
   def test_item_was_updated(self):
     self.assertEqual(TodoItem.objects.get().completed, True)
 
-
 class TestPatchTodoItem(APITestCase):
   """
   Ensure we can update an existing todo item using PATCH
@@ -58,12 +55,11 @@ class TestPatchTodoItem(APITestCase):
     data = {'title': 'Walk the dog', 'completed': True}
     self.response = self.client.patch(url, data, format='json')
 
-  def test_received_200_created_status_code(self):
+  def test_received_200_ok_status_code(self):
     self.assertEqual(self.response.status_code, status.HTTP_200_OK)
 
   def test_item_was_updated(self):
     self.assertEqual(TodoItem.objects.get().completed, True)
-
 
 class TestDeleteTodoItem(APITestCase):
   """
@@ -81,44 +77,18 @@ class TestDeleteTodoItem(APITestCase):
   def test_the_item_was_deleted(self):
     self.assertEqual(TodoItem.objects.count(), 0)
 
+class TestDeleteAllItems(APITestCase):
+  """
+  Ensure we can delete all todo items
+  """
+  def setUp(self):
+    createItem(self.client)
+    createItem(self.client)
+    self.assertEqual(TodoItem.objects.count(), 2)
+    self.response = self.client.delete(reverse('todoitem-list'))
 
-# class TodoItemTests(APITestCase):
-#   """
-#   TodoItem tests
-#   """ 
-#   def test_create_todoitem(self):
-#     """
-#     Ensure we can create a new todo item
-#     """
-#     url = reverse('todoitem-list')
-#     data = {'title': 'Walk the dog'}
-#     response = self.client.post(url, data, format='json')
-#     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-#     self.assertEqual(TodoItem.objects.count(), 1)
-#     self.assertEqual(TodoItem.objects.get().title, 'Walk the dog')
-  
-#   def test_delete_todoitem(self):
-#     """
-#     Ensure we can delete a todo item
-#     """
-#     url = reverse('todoitem-list')
-#     data = {'title': 'Walk the dog'}
-#     response = self.client.post(url, data, format='json')
-#     url = response['Location']
-#     response = self.client.delete(url)
-#     self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-#     self.assertEqual(TodoItem.objects.count(), 0)
+  def test_received_204_no_content_status_code(self):
+    self.assertEqual(self.response.status_code, status.HTTP_204_NO_CONTENT)
 
-#   def test_update_todoitem(self):
-#     """
-#     Ensure we can update a todo item
-#     """
-#     url = reverse('todoitem-list')
-#     data = {'title': 'Walk the dog'}
-#     response = self.client.post(url, data, format='json')
-#     url = response['Location']
-#     data = {'title': 'Walk the dog', 'completed': True}
-#     response = self.client.put(url, data, format='json')
-#     self.assertEqual(response.status_code, status.HTTP_200_OK)
-#     self.assertEqual(TodoItem.objects.count(), 1)
-#     self.assertEqual(TodoItem.objects.get().completed, True)
+  def test_all_items_were_deleted(self):
+    self.assertEqual(TodoItem.objects.count(), 0)
