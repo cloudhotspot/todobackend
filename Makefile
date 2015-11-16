@@ -7,7 +7,7 @@ test:
 	@ docker-compose -p todobackend-dev -f docker/dev/docker-compose.yml run --rm agent
 	${INFO} "Running tests..."
 	@ docker-compose -p todobackend-dev -f docker/dev/docker-compose.yml run --rm test
-	# ${INFO} "Testing complete"
+	${INFO} "Testing complete"
 
 build:
 	${INFO} "Building application artefacts..."
@@ -40,7 +40,7 @@ clean:
 
 compose:
 	${INFO} "Running docker-compose command..."
-	docker-compose -p todobackend -f docker/release/docker-compose.yml $(COMPOSE_ARGS)
+	@ docker-compose -p todobackend -f docker/release/docker-compose.yml $(COMPOSE_ARGS)
 
 # Cosmetics
 YELLOW = "\033[1;33m"

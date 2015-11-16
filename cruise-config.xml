@@ -1,0 +1,49 @@
+<pipelines group="todobackend">
+    <pipeline name="continuous_integration" template="continuous_integration">
+      <materials>
+        <git url="https://github.com/cloudhotspot/todobackend.git" />
+      </materials>
+    </pipeline>
+  </pipelines>
+  <templates>
+    <pipeline name="continuous_integration">
+      <stage name="run_unit_integration_tests">
+        <jobs>
+          <job name="make_test">
+            <tasks>
+              <exec command="make">
+                <arg>test</arg>
+              </exec>
+            </tasks>
+            <artifacts>
+              <test src="src/xunittest.xml" />
+              <test src="src/coverage.xml" />
+              <test src="reports/*" />
+            </artifacts>
+          </job>
+        </jobs>
+      </stage>
+      <stage name="build_application_artefacts">
+        <jobs>
+          <job name="make_build">
+            <tasks>
+              <exec command="make">
+                <arg>build</arg>
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+      <stage name="release_and_run_acceptance_tests">
+        <jobs>
+          <job name="make_release">
+            <tasks>
+              <exec command="make">
+                <arg>release</arg>
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+  </templates>
