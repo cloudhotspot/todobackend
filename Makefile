@@ -7,7 +7,7 @@ test:
 	@ docker-compose -p todobackend-dev -f docker/dev/docker-compose.yml run --rm agent
 	${INFO} "Running tests..."
 	@ docker-compose -p todobackend-dev -f docker/dev/docker-compose.yml run --rm test
-	${INFO} "Testing complete"
+	# ${INFO} "Testing complete"
 
 build:
 	${INFO} "Building application artefacts..."
