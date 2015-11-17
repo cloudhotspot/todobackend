@@ -3,8 +3,10 @@ PROJECT_NAME ?= todobackend
 .PHONY: test build release clean compose
 
 test:
+	${INFO} "Pulling latest images..."
+	@ docker-compose -p $(PROJECT_NAME)-dev -f docker/dev/docker-compose.yml pull
 	${INFO} "Building images..."
-	@ docker-compose -p $(PROJECT_NAME)-dev -f docker/dev/docker-compose.yml build
+	@ docker-compose -p $(PROJECT_NAME)-dev -f docker/dev/docker-compose.yml build --pull
 	${INFO} "Ensuring database is ready..."
 	@ docker-compose -p $(PROJECT_NAME)-dev -f docker/dev/docker-compose.yml run --rm agent
 	${INFO} "Running tests..."
@@ -17,8 +19,10 @@ build:
 	${INFO} "Build complete"
 
 release: 
+	${INFO} "Pulling latest images..."
+	@ docker-compose -p $(PROJECT_NAME) -f docker/release/docker-compose.yml pull
 	${INFO} "Building images..."
-	@ docker-compose -p $(PROJECT_NAME) -f docker/release/docker-compose.yml build
+	@ docker-compose -p $(PROJECT_NAME) -f docker/release/docker-compose.yml build --pull
 	${INFO} "Ensuring database is ready..."
 	@ docker-compose -p $(PROJECT_NAME) -f docker/release/docker-compose.yml run --rm agent
 	${INFO} "Running database migrations..."
