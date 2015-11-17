@@ -44,5 +44,10 @@ test:
   image: cloudhotspot/todobackend-specs
   links:
     - app
+  volumes:
+    - ../../src:/reports
   environment:
     URL: http://app:8000/todos
+    JUNIT_REPORT_PATH: /reports/acceptance.xml
+    JUNIT_REPORT_STACK: 1
+  command: --reporter mocha-jenkins-reporter

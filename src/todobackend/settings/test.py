@@ -9,10 +9,10 @@ NOSE_ARGS = [
   '--nologcapture',                 # don't output log capture
   '--with-coverage',                # activate coverage report
   '--cover-package=todo',           # coverage reports will apply to these packages
-  '--with-spec',                    # Spec style tests
+  '--with-spec',                    # spec style tests
   '--spec-color',
-  '--with-xunit',                   # enable XUnit plugin
-  '--xunit-file=xunittest.xml',     # the XUnit report file
+  '--with-xunit',                   # enable xunit plugin
+  '--xunit-file=unittests.xml',     # xunit report file
   '--cover-xml',                    # produce XML coverage info
   '--cover-xml-file=coverage.xml',  # the XML coverage file
 ]

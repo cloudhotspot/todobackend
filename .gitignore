@@ -5,4 +5,5 @@ venv
 .coverage
 target
 coverage.xml
-xunittest.xml
+unittests.xml
+acceptance.xml
