@@ -18,5 +18,8 @@ node {
     stage 'Create release environment and run acceptance tests'
     sh 'make release'
 
+    stage 'Clean up'
+    sh 'make clean'
+
     step([$class: 'JUnitResultArchiver', testResults: '**/src/*.xml'])
 }
