@@ -1,5 +1,6 @@
 FROM cloudhotspot/todobackend-base:latest
 MAINTAINER Justin Menga <justin.menga@gmail.com>
+LABEL application="todobackend"
 
 ADD target /wheelhouse
 

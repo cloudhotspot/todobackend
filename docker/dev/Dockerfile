@@ -1,8 +1,9 @@
 FROM cloudhotspot/todobackend-base:latest
 MAINTAINER Justin Menga <justin.menga@gmail.com>
+LABEL application="todobackend"
 
 # Set mirrors to NZ
-# RUN sed -i "s/http:\/\/archive./http:\/\/nz.archive./g" /etc/apt/sources.list 
+RUN sed -i "s/http:\/\/archive./http:\/\/nz.archive./g" /etc/apt/sources.list 
 
 # Install dev/build dependencies
 RUN apt-get update && \
@@ -28,4 +29,5 @@ RUN chmod +x /usr/local/bin/test.sh
 
 # Set defaults for entrypoint and command string
 ENTRYPOINT ["test.sh"]
-CMD ["python", "manage.py", "test"]
+CMD ["python", "manage.py", "test", "--noinput"]
+
