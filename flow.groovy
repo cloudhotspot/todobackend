@@ -22,6 +22,12 @@ node {
             error 'Test Failure'
         }
         step([$class: 'JUnitResultArchiver', testResults: '**/src/*.xml'])
+
+        stage 'Tag release image'
+        sh 'make tag'
+
+        stage 'Publish'
+        sh 'make publish'
     }
     finally {
         stage 'Clean up'
