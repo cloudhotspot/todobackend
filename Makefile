@@ -56,6 +56,7 @@ compose:
 tag:
 	${INFO} "Tagging release image as $(GIT_BRANCH).$(GIT_SHA)..."
 	@ docker tag -f $(PROJECT_NAME)_$(APP_NAME) $(ORG_NAME)/$(REPO_NAME):$(GIT_BRANCH).$(GIT_SHA)
+	@ if [[ -n "$$BUILD_ID" ]]; then docker tag -f $(PROJECT_NAME)_$(APP_NAME) $(ORG_NAME)/$(REPO_NAME):$(GIT_BRANCH).$$BUILD_ID; fi
 	@ if [[ "$(GIT_BRANCH)" -eq "master" ]]; then docker tag -f $(PROJECT_NAME)_$(APP_NAME) $(ORG_NAME)/$(REPO_NAME):latest; fi
 	${INFO} "Tagging release image with tags $(TAG_ARGS)..."
 	@ $(foreach tag,$(TAG_ARGS), docker tag -f $(PROJECT_NAME)_$(APP_NAME) $(ORG_NAME)/$(REPO_NAME):$(tag);)
