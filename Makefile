@@ -1,6 +1,11 @@
 PROJECT_NAME ?= todobackend
+ORG_NAME ?= cloudhotspot
+REPO_NAME ?= todobackend
 
-.PHONY: test build release clean compose
+# This must match the release environment application service in docker/release/docker-compose.yml
+APP_NAME ?= app
+
+.PHONY: test build release clean compose tag publish
 
 test:
 	${INFO} "Pulling latest images..."
@@ -32,7 +37,7 @@ release:
 	${INFO} "Running acceptance tests..."
 	@ docker-compose -p $(PROJECT_NAME) -f docker/release/docker-compose.yml run --rm test
 	${INFO} "Acceptance testing complete"
-	
+
 clean:
 	${INFO} "Destroying development environment..."
 	@ docker-compose -p $(PROJECT_NAME)-dev -f docker/dev/docker-compose.yml kill
@@ -48,6 +53,19 @@ compose:
 	${INFO} "Running docker-compose command..."
 	@ docker-compose -p $(PROJECT_NAME) -f docker/release/docker-compose.yml $(COMPOSE_ARGS)
 
+tag:
+	${INFO} "Tagging release image as $(GIT_BRANCH).$(GIT_SHA)..."
+	@ docker tag -f $(PROJECT_NAME)_$(APP_NAME) $(ORG_NAME)/$(REPO_NAME):$(GIT_BRANCH).$(GIT_SHA)
+	@ if [[ "$(GIT_BRANCH)" -eq "master" ]]; then docker tag -f $(PROJECT_NAME)_$(APP_NAME) $(ORG_NAME)/$(REPO_NAME):latest; fi
+	${INFO} "Tagging release image with tags $(TAG_ARGS)..."
+	@ $(foreach tag,$(TAG_ARGS), docker tag -f $(PROJECT_NAME)_$(APP_NAME) $(ORG_NAME)/$(REPO_NAME):$(tag);)
+	${INFO} "Tagging complete"
+
+publish:
+	${INFO} "Publishing release image $(ORG_NAME)/$(REPO_NAME)..."
+	@ docker push $(ORG_NAME)/$(REPO_NAME)
+	${INFO} "Publish complete"
+
 # Cosmetics
 YELLOW = "\033[1;33m"
 NC = "\033[0m"
@@ -58,8 +76,18 @@ INFO=@sh -c '\
   echo "=> $$1"; \
   printf $(NC)' INFO
 
+# Git metadata
+GIT_BRANCH = $$(git rev-parse --abbrev-ref HEAD)
+GIT_SHA = $$(git rev-parse --short HEAD)
+
 # Extract run arguments
 ifeq (compose,$(firstword $(MAKECMDGOALS)))
   COMPOSE_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
   $(eval $(COMPOSE_ARGS):;@:)
+endif
+
+# Extract tag arguments
+ifeq (tag,$(firstword $(MAKECMDGOALS)))
+  TAG_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  $(eval $(TAG_ARGS):;@:)
 endif
