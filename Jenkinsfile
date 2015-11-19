@@ -30,7 +30,10 @@ node {
         if (env.BRANCH_NAME == 'master') {
             tags << 'latest'
         }
-        tags.each { tag -> sh 'make tag ${tag}' }
+        tags.each { tag -> 
+            echo '${tag}'
+            sh 'make tag ${tag}' 
+        }
 
         stage 'Publish release image'
         def images = []
