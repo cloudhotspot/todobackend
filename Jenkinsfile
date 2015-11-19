@@ -16,6 +16,7 @@ node {
             echo 'master detected...'
             tags << 'latest'
         }
+        echo "tags: ${tags.size()}"
         tags.each { tag -> 
             sh "make tag ${tag}"
         }
