@@ -6,26 +6,6 @@ node {
     checkout scm
 
     try {
-        /*
-        stage 'Run unit/integration tests'
-        try { sh 'make test' } 
-        catch(all) {
-            step([$class: 'JUnitResultArchiver', testResults: '**/src/*.xml'])
-            error 'Test Failure'
-        }
-        
-        stage 'Build application artefacts'
-        sh 'make build'
-
-        stage 'Create release environment and run acceptance tests'
-        try { sh 'make release' }
-        catch(all) {
-            step([$class: 'JUnitResultArchiver', testResults: '**/src/*.xml'])
-            error 'Test Failure'
-        }
-        step([$class: 'JUnitResultArchiver', testResults: '**/src/*.xml'])
-        */
-
         stage 'Build application artefacts'
         sh 'make build'
 
