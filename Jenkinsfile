@@ -29,8 +29,11 @@ node {
             sh 'make tag latest'
         }
 
-        stage 'Publish'
-        sh 'make publish'
+        stage 'Publish release image'
+        def releaseImage = docker.image('cloudhotspot/todobackend')
+        docker.withRegistry("https://registry.hub.docker.com", "docker-registry") {
+          image.push()
+        }
     }
     finally {
         stage 'Clean up'
