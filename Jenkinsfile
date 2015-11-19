@@ -17,7 +17,7 @@ node {
             tags << 'latest'
         }
         echo "tags: ${tags.size()}"
-        for (tag in tags) { tag -> 
+        for (tag in tags) { 
             echo "each ${tag}"
             sh "make tag ${tag}"
         }
