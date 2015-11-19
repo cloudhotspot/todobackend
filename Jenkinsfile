@@ -13,7 +13,7 @@ node {
         stage 'Tag release image'
         def tags = [ "${env.BRANCH_NAME}.${env.BUILD_TIMESTAMP}", "latest" ]
         echo "tags: ${tags.size()}"
-        tags.each { tag -> 
+        for (tag in tags) { 
             echo "each ${tag}"
             sh "make tag ${tag}"
         }
