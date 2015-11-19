@@ -18,6 +18,7 @@ node {
         }
         echo "tags: ${tags.size()}"
         tags.each { tag -> 
+            echo "each ${tag}"
             sh "make tag ${tag}"
         }
 
