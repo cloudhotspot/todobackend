@@ -6,6 +6,7 @@ node {
     checkout scm
 
     try {
+        /*
         stage 'Run unit/integration tests'
         try { sh 'make test' } 
         catch(all) {
@@ -23,6 +24,7 @@ node {
             error 'Test Failure'
         }
         step([$class: 'JUnitResultArchiver', testResults: '**/src/*.xml'])
+        */
 
         // Requires Zentimestamp plugin for BUILD_TIMESTAMP variable
         stage 'Tag release image'
@@ -31,7 +33,7 @@ node {
             tags << 'latest'
         }
         tags.each { tag -> 
-            echo '$BRANCH_NAME.$BUILD_TIMESTAMP'
+            sh 'echo $BRANCH_NAME.$BUILD_TIMESTAMP'
             sh 'make tag ${tag}' 
         }
 
