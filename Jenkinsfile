@@ -11,7 +11,7 @@ node {
 
         // Requires Zentimestamp plugin for BUILD_TIMESTAMP variable
         stage 'Tag release image'
-        def tags = [ '${env.BRANCH_NAME}.${env.BUILD_TIMESTAMP}' ]
+        def tags = [ env.BRANCH_NAME + '.' + env.BUILD_TIMESTAMP ]
         if (env.BRANCH_NAME == 'master') {
             tags << 'latest'
         }
