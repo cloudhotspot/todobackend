@@ -13,6 +13,7 @@ node {
         stage 'Tag release image'
         def tags = [ "${env.BRANCH_NAME}.${env.BUILD_TIMESTAMP}"  ]
         if (env.BRANCH_NAME == 'master') {
+            echo 'master detected...'
             tags << 'latest'
         }
         tags.each { tag -> 
