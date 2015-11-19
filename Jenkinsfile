@@ -30,7 +30,7 @@ node {
         }
 
         stage 'Publish release image'
-        def releaseImage = docker.image('cloudhotspot/todobackend')
+        def image = docker.image('cloudhotspot/todobackend')
         docker.withRegistry("https://registry.hub.docker.com", "docker-registry") {
           image.push()
         }
