@@ -33,7 +33,7 @@ node {
             tags << 'latest'
         }
         tags.each { tag -> 
-            sh 'echo $BRANCH_NAME.$BUILD_TIMESTAMP'
+            sh 'echo $BRANCH_NAME.$BUILD_ID'
             sh 'make tag ${tag}' 
         }
 
