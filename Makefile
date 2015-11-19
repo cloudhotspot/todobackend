@@ -54,10 +54,6 @@ compose:
 	@ docker-compose -p $(PROJECT_NAME) -f docker/release/docker-compose.yml $(COMPOSE_ARGS)
 
 tag:
-	${INFO} "Tagging release image as $(GIT_BRANCH).$(GIT_SHA)..."
-	docker tag -f $(PROJECT_NAME)_$(APP_NAME) $(ORG_NAME)/$(REPO_NAME):$(GIT_BRANCH).$(GIT_SHA)
-	if [[ -n "$$BUILD_ID" ]]; then docker tag -f $(PROJECT_NAME)_$(APP_NAME) $(ORG_NAME)/$(REPO_NAME):$(GIT_BRANCH).$$BUILD_ID; fi
-	if [[ "$(GIT_BRANCH)" -eq "master" ]]; then docker tag -f $(PROJECT_NAME)_$(APP_NAME) $(ORG_NAME)/$(REPO_NAME):latest; fi
 	${INFO} "Tagging release image with tags $(TAG_ARGS)..."
 	@ $(foreach tag,$(TAG_ARGS), docker tag -f $(PROJECT_NAME)_$(APP_NAME) $(ORG_NAME)/$(REPO_NAME):$(tag);)
 	${INFO} "Tagging complete"
@@ -76,10 +72,6 @@ INFO=@sh -c '\
   printf $(YELLOW); \
   echo "=> $$1"; \
   printf $(NC)' INFO
-
-# Git metadata
-GIT_BRANCH = $$(git rev-parse --abbrev-ref HEAD)
-GIT_SHA = $$(git rev-parse --short HEAD)
 
 # Extract run arguments
 ifeq (compose,$(firstword $(MAKECMDGOALS)))
