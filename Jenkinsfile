@@ -16,7 +16,7 @@ node {
             tags << 'latest'
         }
         tags.each { tag -> 
-            sh 'make tag ${tag}' 
+            sh "make tag ${tag}"
         }
 
         stage 'Publish release image'
