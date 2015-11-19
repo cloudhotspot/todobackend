@@ -11,7 +11,7 @@ node {
 
         // Requires Zentimestamp plugin for BUILD_TIMESTAMP variable
         stage 'Tag release image'
-        env.TEST = env.BRANCH_NAME + '.' + env.BUILD_TIMESTAMP 
+        env.TEST = "${env.BRANCH_NAME}.${env.BUILD_TIMESTAMP}" 
         sh 'echo $TEST'
         sh 'echo $BRANCH_NAME.$BUILD_TIMESTAMP'
         def tags = [ env.BRANCH_NAME + '.' + env.BUILD_TIMESTAMP ]
@@ -19,19 +19,9 @@ node {
             tags << 'latest'
         }
         tags.each { tag -> 
-            env.TAG = tag
-            sh 'echo $TAG'
             sh 'make tag ${tag}' 
         }
 
-        stage 'Publish release image'
-        def images = []
-        tags.each { tag -> 
-            images << docker.image('${org_name}/${repo_name}:${tag}')
-        }
-        docker.withRegistry("https://registry.hub.docker.com", "docker-registry") {
-          images.each { image -> image.push() }
-        }
     }
     finally {
         stage 'Clean up'
