@@ -14,7 +14,7 @@ node {
         def tags = [ "${env.BRANCH_NAME}.${env.BUILD_TIMESTAMP}"  ]
         if (env.BRANCH_NAME == 'master') {
             echo 'master detected...'
-            tags << 'latest'
+            tags << "latest"
         }
         echo "tags: ${tags.size()}"
         for (tag in tags) { 
