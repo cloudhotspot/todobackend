@@ -11,7 +11,9 @@ node {
 
         // Requires Zentimestamp plugin for BUILD_TIMESTAMP variable
         stage 'Tag release image'
-        def tags = [ "${env.BRANCH_NAME}.${env.BUILD_TIMESTAMP}", "latest" ]
+        def tags = new ArrayList<String>()
+        tags << "${env.BRANCH_NAME}.${env.BUILD_TIMESTAMP}"
+        tags << "latest"
         echo "tags: ${tags.size()}"
         for (tag in tags) { 
             echo "each ${tag}"

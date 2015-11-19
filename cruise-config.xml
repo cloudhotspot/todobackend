@@ -1,4 +1,4 @@
-<pipelines group="todobackend">
+  <pipelines group="todobackend">
     <pipeline name="continuous_integration" template="continuous_integration">
       <materials>
         <git url="https://github.com/cloudhotspot/todobackend.git" />
