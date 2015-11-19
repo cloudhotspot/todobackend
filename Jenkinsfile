@@ -11,13 +11,9 @@ node {
 
         // Requires Zentimestamp plugin for BUILD_TIMESTAMP variable
         stage 'Tag release image'
-        def tags = [ "${env.BRANCH_NAME}.${env.BUILD_TIMESTAMP}"  ]
-        if (env.BRANCH_NAME == 'master') {
-            echo 'master detected...'
-            tags << "latest"
-        }
+        def tags = [ "${env.BRANCH_NAME}.${env.BUILD_TIMESTAMP}", "latest" ]
         echo "tags: ${tags.size()}"
-        for (tag in tags) { 
+        tags.each { tag -> 
             echo "each ${tag}"
             sh "make tag ${tag}"
         }
