@@ -24,15 +24,19 @@ node {
 
         
         stage 'Tag release image'
-        sh 'make tag $BRANCH_NAME.$BUILD_ID'
+        env.BUILD_TIMESTAMP = new Date().getTime()
+        sh 'make tag $BRANCH_NAME.$BUILD_TIMESTAMP'
+
         if (isMaster()) {
             sh 'make tag latest'
         }
 
         stage 'Publish release image'
-        def image = docker.image('cloudhotspot/todobackend')
+        def images = [docker.image('cloudhotspot/todobackend:${env.BRANCH_NAME}.${env.BUILD_TIMESTAMP}')]
+        if (isMaster()) images << docker.image('cloudhotspot/todobackend')
+        
         docker.withRegistry("https://registry.hub.docker.com", "docker-registry") {
-          image.push()
+          images.each { image -> image.push() }
         }
     }
     finally {
