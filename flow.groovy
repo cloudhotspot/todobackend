@@ -23,14 +23,31 @@ node {
         }
         step([$class: 'JUnitResultArchiver', testResults: '**/src/*.xml'])
 
+        /*
         stage 'Tag release image'
-        sh 'make tag'
+        def branch = stripGitBranch(env.GIT_BRANCH)
+        sh 'make tag ${branch}.${env.BUILD_ID}'
+        if (isMaster(env.GIT_BRANCH)) {
+            sh 'make tag latest'
+        }
 
         stage 'Publish'
         sh 'make publish'
+        */
     }
     finally {
         stage 'Clean up'
         sh 'make clean'
     }
 }
+
+// Helper functions
+def isMaster(branch) {
+    return stripGitBranch(branch) == 'master'
+}
+
+def stripGitBranch(branch) {
+    return branch - ~/.*\//
+}
+
+
