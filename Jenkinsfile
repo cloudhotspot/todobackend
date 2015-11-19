@@ -1,4 +1,6 @@
 // Groovy workflow script for Jenkins Multibranch Workflow plugin
+def org_name = 'cloudhotspot'
+def repo_name = 'todobackend'
 
 node {
     checkout scm
@@ -22,19 +24,19 @@ node {
         }
         step([$class: 'JUnitResultArchiver', testResults: '**/src/*.xml'])
 
-        
+        // Requires Zentimestamp plugin for BUILD_TIMESTAMP variable
         stage 'Tag release image'
-        env.BUILD_TIMESTAMP = new Date().getTime()
-        sh 'make tag $BRANCH_NAME.$BUILD_TIMESTAMP'
-
-        if (isMaster()) {
-            sh 'make tag latest'
+        def tags = [ '${env.BRANCH_NAME}.${env.BUILD_TIMESTAMP}' ]
+        if (env.BRANCH_NAME == 'master') {
+            tags << 'latest'
         }
+        tags.each { tag -> sh 'make tag ${tag}' }
 
         stage 'Publish release image'
-        def images = [docker.image('cloudhotspot/todobackend:${env.BRANCH_NAME}.${env.BUILD_TIMESTAMP}')]
-        if (isMaster()) images << docker.image('cloudhotspot/todobackend')
-        
+        def images = []
+        tags.each { tag -> 
+            images << docker.image('${org_name}/${repo_name}:${tag}')
+        }
         docker.withRegistry("https://registry.hub.docker.com", "docker-registry") {
           images.each { image -> image.push() }
         }
@@ -43,9 +45,4 @@ node {
         stage 'Clean up'
         sh 'make clean'
     }
-}
-
-// Helper functions
-def isMaster() {
-    return env.BRANCH_NAME == 'master'
 }
