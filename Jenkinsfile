@@ -32,8 +32,11 @@ node {
         // Requires Zentimestamp plugin for BUILD_TIMESTAMP variable
         stage 'Tag and publish release image'
         def buildTag = "${env.BRANCH_NAME}.${env.BUILD_TIMESTAMP}"
+        def commitTag = "${env.BRANCH_NAME}.${env.GIT_COMMIT}"
         sh "make tag ${buildTag}"
+        sh "make tag ${commitTag}"
         pushImage(buildTag, org_name, repo_name, docker_registry, docker_credential)
+        pushImage(commitTag, org_name, repo_name, docker_registry, docker_credential)
         if (env.BRANCH_NAME == 'master') {
             sh 'make tag latest'
             pushImage('latest', org_name, repo_name, docker_registry, docker_credential)
