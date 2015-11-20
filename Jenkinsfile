@@ -1,6 +1,8 @@
 // Groovy workflow script for Jenkins Multibranch Workflow plugin
 def org_name = 'cloudhotspot'
 def repo_name = 'todobackend'
+def docker_registry = 'https://registry.hub.docker.com'
+def docker_credential = 'docker-registry'
 
 node {
     checkout scm
@@ -10,27 +12,29 @@ node {
         sh 'make build'
 
         // Requires Zentimestamp plugin for BUILD_TIMESTAMP variable
-        stage 'Tag release image'
-        def tags = new ArrayList<String>()
-        tags << "${env.BRANCH_NAME}.${env.BUILD_TIMESTAMP}"
-        tags << "latest"
-        echo "tags: ${tags.size()}"
-        for (tag in tags) { 
-            echo "each ${tag}"
-            sh "make tag ${tag}"
-        }
-
-        stage 'Publish release image'
-        def images = []
-        tags.each { tag -> 
-            images << docker.image("${org_name}/${repo_name}:${tag}")
-        }
-        docker.withRegistry("https://registry.hub.docker.com", "docker-registry") {
-          images.each { image -> image.push() }
+        stage 'Tag and publish release image'
+        def buildTag = "${env.BRANCH_NAME}.${env.BUILD_TIMESTAMP}"
+        makeTag(buildTag)
+        pushImage(buildTag)
+        if (env.BRANCH_NAME == 'master') {
+            makeTag('latest')
+            pushImage('latest')
         }
     }
     finally {
         stage 'Clean up'
         sh 'make clean'
+    }
+}
+
+// Functions
+def makeTag(tag) {
+    sh 'make tag ${tag}'
+}
+
+def pushImage(tag) {
+    def image = docker.image("${org_name}/${repo_name}:${tag}")
+    docker.withRegistry(docker_registry, docker_registry) {
+        image.push()
     }
 }
