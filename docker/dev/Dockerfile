@@ -3,7 +3,7 @@ MAINTAINER Justin Menga <justin.menga@gmail.com>
 LABEL application="todobackend"
 
 # Set mirrors to NZ
-RUN sed -i "s/http:\/\/archive./http:\/\/nz.archive./g" /etc/apt/sources.list 
+# RUN sed -i "s/http:\/\/archive./http:\/\/nz.archive./g" /etc/apt/sources.list 
 
 # Install dev/build dependencies
 RUN apt-get update && \
