@@ -8,16 +8,34 @@ node {
     checkout scm
 
     try {
+        stage 'Run unit/integration tests'
+        try { sh 'make test' }
+        catch(all) {
+            step([$class: 'JUnitResultArchiver', testResults: '**/src/*.xml'])
+            error 'Test Failure'
+        }
+
+        stage 'Build application artefacts'
+        sh 'make build'
+
+        stage 'Create release environment and run acceptance tests'
+        try { sh 'make release' }
+        catch(all) {
+            step([$class: 'JUnitResultArchiver', testResults: '**/src/*.xml'])
+            error 'Test Failure'
+        }
+        step([$class: 'JUnitResultArchiver', testResults: '**/src/*.xml'])
+
         stage 'Build application artefacts'
         sh 'make build'
 
         // Requires Zentimestamp plugin for BUILD_TIMESTAMP variable
         stage 'Tag and publish release image'
         def buildTag = "${env.BRANCH_NAME}.${env.BUILD_TIMESTAMP}"
-        makeTag(buildTag)
+        sh "make tag ${tag}"
         pushImage(buildTag, org_name, repo_name, docker_registry, docker_credential)
         if (env.BRANCH_NAME == 'master') {
-            makeTag('latest')
+            sh 'make tag latest'
             pushImage('latest', org_name, repo_name, docker_registry, docker_credential)
         }
     }
@@ -28,10 +46,6 @@ node {
 }
 
 // Functions
-def makeTag(tag) {
-    sh "make tag ${tag}"
-}
-
 def pushImage(tag, org_name, repo_name, docker_registry, docker_credential) {
     def image = docker.image("${org_name}/${repo_name}:${tag}")
     docker.withRegistry(docker_registry, docker_registry) {
