@@ -29,7 +29,7 @@ node {
 
 // Functions
 def makeTag(tag) {
-    sh 'make tag ${tag}'
+    sh "make tag ${tag}"
 }
 
 def pushImage(tag, org_name, repo_name, docker_registry, docker_credential) {
