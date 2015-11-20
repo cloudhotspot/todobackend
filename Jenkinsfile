@@ -25,16 +25,17 @@ node {
         stage 'Clean up'
         sh 'make clean'
     }
-}
 
-// Functions
-def makeTag(tag) {
-    sh 'make tag ${tag}'
-}
+    // Functions
+    def makeTag(tag) {
+        sh 'make tag ${tag}'
+    }
 
-def pushImage(tag) {
-    def image = docker.image("${org_name}/${repo_name}:${tag}")
-    docker.withRegistry(docker_registry, docker_registry) {
-        image.push()
+    def pushImage(tag) {
+        def image = docker.image("${org_name}/${repo_name}:${tag}")
+        docker.withRegistry(docker_registry, docker_registry) {
+            image.push()
+        }
     }
 }
+
