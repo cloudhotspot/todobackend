@@ -56,7 +56,7 @@ class TestPatchTodoItem(APITestCase):
     self.response = self.client.patch(url, data, format='json')
 
   def test_received_200_ok_status_code(self):
-    self.assertEqual(self.response.status_code, status.HTTP_201_CREATED)
+    self.assertEqual(self.response.status_code, status.HTTP_200_OK)
 
   def test_item_was_updated(self):
     self.assertEqual(TodoItem.objects.get().completed, True)
