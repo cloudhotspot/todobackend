@@ -18,7 +18,7 @@ node {
         pushImage(buildTag, org_name, repo_name)
         if (env.BRANCH_NAME == 'master') {
             makeTag('latest')
-            pushImage('latest', org_name, repo_name)
+            pushImage('latest', org_name, repo_name, docker_registry, docker_credential)
         }
     }
     finally {
@@ -27,13 +27,12 @@ node {
     }
 }
 
-
 // Functions
 def makeTag(tag) {
     sh 'make tag ${tag}'
 }
 
-def pushImage(tag, org_name, repo_name) {
+def pushImage(tag, org_name, repo_name, docker_registry, docker_credential) {
     def image = docker.image("${org_name}/${repo_name}:${tag}")
     docker.withRegistry(docker_registry, docker_registry) {
         image.push()
