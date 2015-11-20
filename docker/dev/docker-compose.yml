@@ -28,7 +28,7 @@ cache:
   entrypoint: "true"
 
 agent:
-  build: ../agent/
+  image: cloudhotspot/ansible
   links:
     - db
   volumes:
