@@ -55,11 +55,12 @@ compose:
 
 tag:
 	${INFO} "Tagging release image with tags $(TAG_ARGS)..."
-	@ $(foreach tag,$(TAG_ARGS), docker tag -f $(PROJECT_NAME)_$(APP_NAME) $(ORG_NAME)/$(REPO_NAME):$(tag);)
+	@ $(foreach tag,$(TAG_ARGS), docker tag -f $(PROJECT_NAME)_$(APP_NAME) $(ORG_NAME)/$(REPO_NAME):$(tag))
 	${INFO} "Tagging complete"
 
 publish:
 	${INFO} "Publishing release image $(ORG_NAME)/$(REPO_NAME)..."
+	$(foreach tag,$(PUBLISH_ARGS), docker push $(ORG_NAME)/$(REPO_NAME):$(tag))
 	@ docker push $(ORG_NAME)/$(REPO_NAME)
 	${INFO} "Publish complete"
 
@@ -82,5 +83,17 @@ endif
 # Extract tag arguments
 ifeq (tag,$(firstword $(MAKECMDGOALS)))
   TAG_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  ifeq ($(TAG_ARGS),)
+  	$(error You must specify a tag)
+  endif
   $(eval $(TAG_ARGS):;@:)
+endif
+
+# Extract push arguments
+ifeq (publish, $(firstword $(MAKECMDGOALS)))
+  PUBLISH_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  ifeq ($(PUBLISH_ARGS),)
+  	$(error You must specify a tag to publish)
+  endif
+  $(eval $(PUBLISH_ARGS):;@:)
 endif
