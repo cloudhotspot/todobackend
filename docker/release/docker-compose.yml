@@ -6,7 +6,7 @@ app:
     - 8000:8000
   volumes_from:
     - static
-  command: uwsgi --http :8000 --module todobackend.wsgi --master --static-map /static=/var/www/todobackend/static 
+  command: ["uwsgi","--http :8000","--module todobackend.wsgi","--master","--static-map /static=/var/www/todobackend/static"]
   environment:
     DJANGO_SETTINGS_MODULE: todobackend.settings.release
     MYSQL_HOST: db
