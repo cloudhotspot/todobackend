@@ -26,9 +26,6 @@ node {
         }
         step([$class: 'JUnitResultArchiver', testResults: '**/src/*.xml'])
 
-        stage 'Build application artefacts'
-        sh 'make build'
-
         // Requires Zentimestamp plugin for BUILD_TIMESTAMP variable
         stage 'Tag and publish release image'
         def buildTag = "${env.BRANCH_NAME}.${env.BUILD_TIMESTAMP}"
