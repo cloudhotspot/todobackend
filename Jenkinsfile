@@ -26,7 +26,7 @@ node {
         }
         step([$class: 'JUnitResultArchiver', testResults: '**/src/*.xml'])
 
-        // Requires Zentimestamp plugin for BUILD_TIMESTAMP variable
+        // Requires Zentimestamp plugin for BUILD_TIMESTAMP variable support
         stage 'Tag and publish release image'
         def buildTag = "${env.BRANCH_NAME}.${env.BUILD_TIMESTAMP}"
         def commitTag = "${env.BRANCH_NAME}.\$(git rev-parse --short HEAD)"
