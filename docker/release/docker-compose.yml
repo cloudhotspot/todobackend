@@ -1,5 +1,6 @@
 app:
-  build: .
+  build: ../../
+  dockerfile: docker/release/Dockerfile
   links:
     - db
   ports:
@@ -25,17 +26,17 @@ db:
     MYSQL_ROOT_PASSWORD: password
 
 agent:
-  image: cloudhotspot/ansible
+  build: ../../
+  dockerfile: docker/agent/Dockerfile
   links:
     - db
-  volumes:
-    - ../../ansible/probe:/ansible
   environment:
     PROBE_HOST: "db"
     PROBE_PORT: "3306"
 
 static:
-  build: .
+  build: ../../
+  dockerfile: docker/release/Dockerfile
   volumes:
     - /var/www/todobackend/
   entrypoint: "true"
@@ -44,8 +45,6 @@ test:
   image: cloudhotspot/todobackend-specs
   links:
     - app
-  volumes:
-    - ../../src:/reports
   environment:
     URL: http://app:8000/todos
     JUNIT_REPORT_PATH: /reports/acceptance.xml

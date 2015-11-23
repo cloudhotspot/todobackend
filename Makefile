@@ -2,60 +2,71 @@ PROJECT_NAME ?= todobackend
 ORG_NAME ?= cloudhotspot
 REPO_NAME ?= todobackend
 
-# This must match the release environment application service in docker/release/docker-compose.yml
+# Computed variables
+RELEASE_CONTEXT = $(PROJECT_NAME)$(BUILD_ID)
+DEV_CONTEXT = $(RELEASE_CONTEXT)dev
+
+# Tagging: this must match the release environment application service in docker/release/docker-compose.yml
 APP_NAME ?= app
 
 .PHONY: test build release clean compose tag publish
 
 test:
 	${INFO} "Pulling latest images..."
-	@ docker-compose -p $(PROJECT_NAME)-dev -f docker/dev/docker-compose.yml pull
+	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml pull
 	${INFO} "Building images..."
-	@ docker-compose -p $(PROJECT_NAME)-dev -f docker/dev/docker-compose.yml build --pull
+	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml build --pull
 	${INFO} "Ensuring database is ready..."
-	@ docker-compose -p $(PROJECT_NAME)-dev -f docker/dev/docker-compose.yml run --rm agent
+	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml run --rm agent
 	${INFO} "Running tests..."
-	@ docker-compose -p $(PROJECT_NAME)-dev -f docker/dev/docker-compose.yml run --rm test
+	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml up test
+	@ docker cp $$(docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml ps -q test):/reports/. reports
+	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml rm -f -v test
 	${INFO} "Testing complete"
 
 build:
 	${INFO} "Building application artefacts..."
-	@ docker-compose -p $(PROJECT_NAME)-dev -f docker/dev/docker-compose.yml run --rm builder
+	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml up builder
+	${INFO} "Copying artefacts to ./target folder..."
+	@ docker cp $$(docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml ps -q builder):/wheelhouse/. target
+	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml rm -f -v builder
 	${INFO} "Build complete"
 
 release: 
 	${INFO} "Pulling latest images..."
-	@ docker-compose -p $(PROJECT_NAME) -f docker/release/docker-compose.yml pull
+	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml pull
 	${INFO} "Building images..."
-	@ docker-compose -p $(PROJECT_NAME) -f docker/release/docker-compose.yml build --pull
+	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml build --pull
 	${INFO} "Ensuring database is ready..."
-	@ docker-compose -p $(PROJECT_NAME) -f docker/release/docker-compose.yml run --rm agent
+	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml run --rm agent
 	${INFO} "Running database migrations..."
-	@ docker-compose -p $(PROJECT_NAME) -f docker/release/docker-compose.yml run --rm app manage.py migrate
+	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml run --rm app manage.py migrate
 	${INFO} "Collecting static files..."
-	@ docker-compose -p $(PROJECT_NAME) -f docker/release/docker-compose.yml run --rm app manage.py collectstatic --noinput
+	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml run --rm app manage.py collectstatic --noinput
 	${INFO} "Running acceptance tests..."
-	@ docker-compose -p $(PROJECT_NAME) -f docker/release/docker-compose.yml run --rm test
+	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml up test
+	@ docker cp $$(docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml ps -q test):/reports/. reports
+	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml rm -f -v test
 	${INFO} "Acceptance testing complete"
 
 clean:
 	${INFO} "Destroying development environment..."
-	@ docker-compose -p $(PROJECT_NAME)-dev -f docker/dev/docker-compose.yml kill
-	@ docker-compose -p $(PROJECT_NAME)-dev -f docker/dev/docker-compose.yml rm -f -v
+	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml kill
+	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml rm -f -v
 	${INFO} "Destroying release environment..."
-	@ docker-compose -p $(PROJECT_NAME) -f docker/release/docker-compose.yml kill
-	@ docker-compose -p $(PROJECT_NAME) -f docker/release/docker-compose.yml rm -f -v
+	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml kill
+	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml rm -f -v
 	${INFO} "Removing dangling images..."
 	@ docker images -q --filter "label=application=$(PROJECT_NAME)" --filter "dangling=true" | xargs -I ARGS docker rmi ARGS
 	${INFO} "Clean complete"
 
 compose:
 	${INFO} "Running docker-compose command..."
-	@ docker-compose -p $(PROJECT_NAME) -f docker/release/docker-compose.yml $(COMPOSE_ARGS)
+	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml $(COMPOSE_ARGS)
 
 tag:
 	${INFO} "Tagging release image with tags $(TAG_ARGS)..."
-	@ $(foreach tag,$(TAG_ARGS), docker tag -f $(PROJECT_NAME)_$(APP_NAME) $(ORG_NAME)/$(REPO_NAME):$(tag))
+	@ $(foreach tag,$(TAG_ARGS), docker tag -f $(RELEASE_CONTEXT)_$(APP_NAME) $(ORG_NAME)/$(REPO_NAME):$(tag))
 	${INFO} "Tagging complete"
 
 publish:

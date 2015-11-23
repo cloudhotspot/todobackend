@@ -19,15 +19,21 @@ ENV WHEELHOUSE=/wheelhouse PIP_WHEEL_DIR=/wheelhouse PIP_FIND_LINKS=/wheelhouse 
 # OUTPUT: Build artefacts (Wheels) are output here
 VOLUME /wheelhouse
 
+# OUTPUT: Test reports are output here
+VOLUME /reports
+
 # INPUT: The application/project root to build from
-VOLUME /application
-WORKDIR /application
+# VOLUME /application
+# WORKDIR /application
 
 # Add test entrypoint script
-ADD scripts/test.sh /usr/local/bin/test.sh
+COPY scripts/test.sh /usr/local/bin/test.sh
 RUN chmod +x /usr/local/bin/test.sh
 
 # Set defaults for entrypoint and command string
 ENTRYPOINT ["test.sh"]
 CMD ["python", "manage.py", "test", "--noinput"]
 
+# Add application source
+COPY src /application
+WORKDIR /application

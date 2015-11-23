@@ -1,17 +1,17 @@
 test:
-  build: .
+  build: ../../
+  dockerfile: docker/dev/Dockerfile
   links:
     - db
   volumes_from:
     - cache
-  volumes:
-    - ../../src:/application
   environment:
     DJANGO_SETTINGS_MODULE: todobackend.settings.test
     MYSQL_HOST: db
     MYSQL_USER: root
     MYSQL_PASSWORD: password
     NOSE_INCLUDE_EXE: 1
+    TEST_OUTPUT_DIR: /reports
 
 db:
   image: mysql
@@ -22,25 +22,25 @@ db:
     MYSQL_ROOT_PASSWORD: password
 
 cache:
-  build: .
+  build: ../../
+  dockerfile: docker/dev/Dockerfile
   volumes:
     - /tmp/cache:/cache
   entrypoint: "true"
 
 agent:
-  image: cloudhotspot/ansible
+  build: ../../
+  dockerfile: docker/agent/Dockerfile
   links:
     - db
-  volumes:
-    - ../../ansible/probe:/ansible
   environment:
     PROBE_HOST: "db"
     PROBE_PORT: "3306"
 
 builder:
-  build: .
+  build: ../../
+  dockerfile: docker/dev/Dockerfile
   volumes:
-    - ../../src:/application
     - ../release/target:/wheelhouse
   volumes_from:
     - cache
