@@ -11,7 +11,7 @@ node {
         stage 'Run unit/integration tests'
         try { sh 'make test' }
         catch(all) {
-            step([$class: 'JUnitResultArchiver', testResults: '**/src/*.xml'])
+            step([$class: 'JUnitResultArchiver', testResults: '**/reports/*.xml'])
             error 'Test Failure'
         }
 
@@ -21,10 +21,10 @@ node {
         stage 'Create release environment and run acceptance tests'
         try { sh 'make release' }
         catch(all) {
-            step([$class: 'JUnitResultArchiver', testResults: '**/src/*.xml'])
+            step([$class: 'JUnitResultArchiver', testResults: '**/reports/*.xml'])
             error 'Test Failure'
         }
-        step([$class: 'JUnitResultArchiver', testResults: '**/src/*.xml'])
+        step([$class: 'JUnitResultArchiver', testResults: '**/reports/*.xml'])
 
         // Requires Zentimestamp plugin for BUILD_TIMESTAMP variable
         stage 'Tag and publish release image'
