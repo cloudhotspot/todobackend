@@ -1,4 +1,8 @@
-// Groovy workflow script for Jenkins Workflow plugin
+// Groovy workflow script for Jenkins Multibranch Workflow plugin
+def org_name = 'cloudhotspot'
+def repo_name = 'todobackend'
+def docker_registry = 'https://registry.hub.docker.com'
+def docker_credential = 'docker-registry'
 def src = 'https://github.com/cloudhotspot/todobackend.git'
 
 node {
@@ -6,34 +10,35 @@ node {
 
     try {
         stage 'Run unit/integration tests'
-        try { sh 'make test' } 
+        try { sh 'make test' }
         catch(all) {
-            step([$class: 'JUnitResultArchiver', testResults: '**/src/*.xml'])
+            step([$class: 'JUnitResultArchiver', testResults: '**/reports/*.xml'])
             error 'Test Failure'
         }
-        
+
         stage 'Build application artefacts'
         sh 'make build'
 
         stage 'Create release environment and run acceptance tests'
         try { sh 'make release' }
         catch(all) {
-            step([$class: 'JUnitResultArchiver', testResults: '**/src/*.xml'])
+            step([$class: 'JUnitResultArchiver', testResults: '**/reports/*.xml'])
             error 'Test Failure'
         }
-        step([$class: 'JUnitResultArchiver', testResults: '**/src/*.xml'])
+        step([$class: 'JUnitResultArchiver', testResults: '**/reports/*.xml'])
 
-        /*
-        stage 'Tag release image'
-        def branch = stripGitBranch(env.GIT_BRANCH)
-        sh 'make tag ${branch}.${env.BUILD_ID}'
-        if (isMaster(env.GIT_BRANCH)) {
+        // Requires Zentimestamp plugin for BUILD_TIMESTAMP variable
+        stage 'Tag and publish release image'
+        def buildTag = "${env.BRANCH_NAME}.${env.BUILD_TIMESTAMP}"
+        def commitTag = "${env.BRANCH_NAME}.\$(git rev-parse --short HEAD)"
+        sh "make tag ${buildTag}"
+        sh "make tag ${commitTag}"
+        pushImage(buildTag, org_name, repo_name, docker_registry, docker_credential)
+        pushImage(commitTag, org_name, repo_name, docker_registry, docker_credential)
+        if (env.BRANCH_NAME == 'master') {
             sh 'make tag latest'
+            pushImage('latest', org_name, repo_name, docker_registry, docker_credential)
         }
-
-        stage 'Publish'
-        sh 'make publish'
-        */
     }
     finally {
         stage 'Clean up'
@@ -41,13 +46,13 @@ node {
     }
 }
 
-// Helper functions
-def isMaster(branch) {
-    return stripGitBranch(branch) == 'master'
-}
-
-def stripGitBranch(branch) {
-    return branch - ~/.*\//
+// Functions
+def pushImage(tag, org_name, repo_name, docker_registry, docker_credential) {
+    def image = docker.image("${org_name}/${repo_name}:${tag}")
+    echo docker_credential
+    docker.withRegistry(docker_registry, docker_registry) {
+        image.push()
+    }
 }
 
 
