@@ -1,7 +1,7 @@
   <pipelines group="todobackend">
     <pipeline name="continuous_integration" template="continuous_integration">
       <materials>
-        <git url="https://github.com/cloudhotspot/todobackend.git" />
+        <git url="https://github.com/cloudhotspot/todobackend.git" branch="self-contained-docker" />
       </materials>
     </pipeline>
   </pipelines>
@@ -16,8 +16,6 @@
               </exec>
             </tasks>
             <artifacts>
-              <test src="src/xunittest.xml" />
-              <test src="src/coverage.xml" />
               <test src="reports/*" />
             </artifacts>
           </job>
@@ -42,6 +40,9 @@
                 <arg>release</arg>
               </exec>
             </tasks>
+            <artifacts>
+              <test src="reports/*" />
+            </artifacts>
           </job>
         </jobs>
       </stage>
