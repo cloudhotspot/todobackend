@@ -6,7 +6,7 @@ def docker_credential = 'docker-registry'
 def src = 'https://github.com/cloudhotspot/todobackend.git'
 
 node {
-    git url: src
+    git url: src,  branch: 'self-contained-docker'
 
     try {
         stage 'Run unit/integration tests'
