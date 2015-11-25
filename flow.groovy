@@ -49,8 +49,7 @@ node {
 // Functions
 def pushImage(tag, org_name, repo_name, docker_registry, docker_credential) {
     def image = docker.image("${org_name}/${repo_name}:${tag}")
-    echo docker_credential
-    docker.withRegistry(docker_registry, docker_registry) {
+    docker.withRegistry(docker_registry, docker_credential) {
         image.push()
     }
 }
