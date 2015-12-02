@@ -27,7 +27,7 @@ test:
 build:
 	${INFO} "Building application artefacts..."
 	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml up builder
-	${INFO} "Copying artefacts to ./target folder..."
+	${INFO} "Copying artefacts to target folder..."
 	@ docker cp $$(docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml ps -q builder):/wheelhouse/. target
 	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml rm -f -v builder
 	${INFO} "Build complete"
@@ -58,6 +58,8 @@ clean:
 	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml rm -f -v
 	${INFO} "Removing dangling images..."
 	@ docker images -q --filter "label=application=$(PROJECT_NAME)" --filter "dangling=true" | xargs -I ARGS docker rmi ARGS
+	${INFO} "Remove build folder..."
+	@ rm -rf target
 	${INFO} "Clean complete"
 
 compose:
@@ -66,12 +68,12 @@ compose:
 
 tag:
 	${INFO} "Tagging release image with tags $(TAG_ARGS)..."
-	@ $(foreach tag,$(TAG_ARGS), docker tag -f $(RELEASE_CONTEXT)_$(APP_NAME) $(ORG_NAME)/$(REPO_NAME):$(tag))
+	@ $(foreach tag,$(TAG_ARGS), docker tag -f $(RELEASE_CONTEXT)_$(APP_NAME) $(ORG_NAME)/$(REPO_NAME):$(tag);)
 	${INFO} "Tagging complete"
 
 publish:
 	${INFO} "Publishing release image $(ORG_NAME)/$(REPO_NAME)..."
-	$(foreach tag,$(PUBLISH_ARGS), docker push $(ORG_NAME)/$(REPO_NAME):$(tag))
+	$(foreach tag,$(PUBLISH_ARGS), docker push $(ORG_NAME)/$(REPO_NAME):$(tag);)
 	@ docker push $(ORG_NAME)/$(REPO_NAME)
 	${INFO} "Publish complete"
 
