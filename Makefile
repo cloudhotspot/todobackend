@@ -1,7 +1,7 @@
 PROJECT_NAME ?= todobackend
 ORG_NAME ?= cloudhotspot
 REPO_NAME ?= todobackend
-
+DOCKER_REGISTRY ?= https://index.docker.io/v1/
 # Computed variables
 RELEASE_CONTEXT = $(PROJECT_NAME)$(BUILD_ID)
 DEV_CONTEXT = $(RELEASE_CONTEXT)dev
@@ -9,7 +9,7 @@ DEV_CONTEXT = $(RELEASE_CONTEXT)dev
 # Tagging: this must match the release environment application service in docker/release/docker-compose.yml
 APP_NAME ?= app
 
-.PHONY: test build release clean compose tag publish
+.PHONY: test build release clean compose tag login logout publish
 
 test:
 	${INFO} "Pulling latest images..."
@@ -69,10 +69,19 @@ tag:
 	@ $(foreach tag,$(TAG_ARGS), docker tag -f $(RELEASE_CONTEXT)_$(APP_NAME) $(ORG_NAME)/$(REPO_NAME):$(tag);)
 	${INFO} "Tagging complete"
 
+login:
+	${INFO} "Logging in to Docker registry $(DOCKER_REGISTRY)..."
+	@ docker login -u $$DOCKER_USER -p $$DOCKER_PASSWORD -e $$DOCKER_EMAIL $(DOCKER_REGISTRY)
+	${INFO} "Logged in to Docker registry $(DOCKER_REGISTRY)"
+
+logout:
+	${INFO} "Logging out of Docker registry $$DOCKER_REGISTRY..."
+	@ docker logout
+	${INFO} "Logged out of Docker registry $$DOCKER_REGISTRY"	
+
 publish:
-	${INFO} "Publishing release image $(ORG_NAME)/$(REPO_NAME)..."
-	$(foreach tag,$(PUBLISH_ARGS), docker push $(ORG_NAME)/$(REPO_NAME):$(tag);)
-	@ docker push $(ORG_NAME)/$(REPO_NAME)
+	$(foreach tag,$(PUBLISH_ARGS), ${INFO} "Publishing tags $(PUBLISH_ARGS) for release image $(ORG_NAME)/$(REPO_NAME)..."; docker push $(ORG_NAME)/$(REPO_NAME):$(tag);)
+	@ $(if $(PUBLISH_ARGS),,${INFO} "Publishing all tags for release image $(ORG_NAME)/$(REPO_NAME)..."; docker push $(ORG_NAME)/$(REPO_NAME))
 	${INFO} "Publish complete"
 
 # Cosmetics
@@ -103,8 +112,5 @@ endif
 # Extract push arguments
 ifeq (publish, $(firstword $(MAKECMDGOALS)))
   PUBLISH_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
-  ifeq ($(PUBLISH_ARGS),)
-  	$(error You must specify a tag to publish)
-  endif
   $(eval $(PUBLISH_ARGS):;@:)
 endif
