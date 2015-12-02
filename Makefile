@@ -58,8 +58,6 @@ clean:
 	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml rm -f -v
 	${INFO} "Removing dangling images..."
 	@ docker images -q --filter "label=application=$(PROJECT_NAME)" --filter "dangling=true" | xargs -I ARGS docker rmi ARGS
-	${INFO} "Remove build folder..."
-	@ rm -rf target
 	${INFO} "Clean complete"
 
 compose:
