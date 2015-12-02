@@ -80,8 +80,9 @@ logout:
 	${INFO} "Logged out of Docker registry $$DOCKER_REGISTRY"	
 
 publish:
-	$(foreach tag,$(PUBLISH_ARGS), ${INFO} "Publishing tags $(PUBLISH_ARGS) for release image $(ORG_NAME)/$(REPO_NAME)..."; docker push $(ORG_NAME)/$(REPO_NAME):$(tag);)
-	@ $(if $(PUBLISH_ARGS),,${INFO} "Publishing all tags for release image $(ORG_NAME)/$(REPO_NAME)..."; docker push $(ORG_NAME)/$(REPO_NAME))
+	${INFO} "Publishing tags $(PUBLISH_ARGS) for release image $(ORG_NAME)/$(REPO_NAME)..."; 
+	@ $(foreach tag,$(PUBLISH_ARGS), docker push $(ORG_NAME)/$(REPO_NAME):$(tag);)
+	@ $(if $(PUBLISH_ARGS),, docker push $(ORG_NAME)/$(REPO_NAME))
 	${INFO} "Publish complete"
 
 # Cosmetics
