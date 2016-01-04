@@ -5,6 +5,7 @@ test:
     - db
   volumes_from:
     - cache
+    - reports
   environment:
     DJANGO_SETTINGS_MODULE: todobackend.settings.test
     MYSQL_HOST: db
@@ -26,6 +27,13 @@ cache:
   dockerfile: docker/dev/Dockerfile
   volumes:
     - /tmp/cache:/cache
+  entrypoint: "true"
+
+reports:
+  build: ../../
+  dockerfile: docker/dev/Dockerfile
+  volumes:
+    - ../../reports:/reports
   entrypoint: "true"
 
 agent:
