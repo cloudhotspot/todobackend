@@ -1,7 +1,11 @@
 PROJECT_NAME ?= todobackend
 ORG_NAME ?= cloudhotspot
 REPO_NAME ?= todobackend
-DOCKER_REGISTRY ?= https://index.docker.io/v1/
+
+# Use this setting to specify a custom Docker registry
+# Must specify a trailing /
+# DOCKER_REGISTRY ?= registry.domain.tld/myrepos/
+
 # Computed variables
 RELEASE_CONTEXT = $(PROJECT_NAME)$(BUILD_ID)
 DEV_CONTEXT = $(RELEASE_CONTEXT)dev
@@ -19,9 +23,7 @@ test:
 	${INFO} "Ensuring database is ready..."
 	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml run --rm agent
 	${INFO} "Running tests..."
-	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml up test
-	@ docker cp $$(docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml ps -q test):/reports/. reports
-	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml rm -f -v test
+	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml run --rm test
 	${INFO} "Testing complete"
 
 build:
@@ -66,7 +68,7 @@ compose:
 
 tag:
 	${INFO} "Tagging release image with tags $(TAG_ARGS)..."
-	@ $(foreach tag,$(TAG_ARGS), docker tag -f $(RELEASE_CONTEXT)_$(APP_NAME) $(ORG_NAME)/$(REPO_NAME):$(tag);)
+	@ $(foreach tag,$(TAG_ARGS), docker tag -f $(RELEASE_CONTEXT)_$(APP_NAME) $(DOCKER_REGISTRY)$(ORG_NAME)/$(REPO_NAME):$(tag);)
 	${INFO} "Tagging complete"
 
 login:
