@@ -100,14 +100,14 @@ YELLOW := "\033[1;33m"
 NC := "\033[0m"
 
 # Shell Functions
-INFO := @sh -c '\
+INFO := @bash -c '\
   printf $(YELLOW); \
   echo "=> $$1"; \
   printf $(NC)' INFO
 
 INSPECT := $$(docker-compose -p $$1 -f $$2 ps -q $$3 | xargs -I ARGS docker inspect -f "{{ .State.ExitCode }}" ARGS)
 
-CHECK := @sh -c '\
+CHECK := @bash -c '\
 	if [[ $(INSPECT) -ne 0 ]]; \
 	then exit $(INSPECT); fi' CHECK
 
