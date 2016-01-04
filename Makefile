@@ -19,26 +19,34 @@ test:
 	${INFO} "Pulling latest images..."
 	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml pull
 	${INFO} "Building images..."
-	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml build --pull
+	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml build --pull test
+	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml build --pull agent
+	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml build cache
 	${INFO} "Ensuring database is ready..."
 	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml run --rm agent
 	${INFO} "Running tests..."
-	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml run --rm test
+	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml up test
+	@ docker cp $$(docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml ps -q test):/reports/. reports;
+	${CHECK} $(DEV_CONTEXT) docker/dev/docker-compose.yml test
 	${INFO} "Testing complete"
 
 build:
-	${INFO} "Building application artefacts..."
+	${INFO} "Creating builder image..."
+	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml build builder
+	${INFO} "Building application artifacts..."
 	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml up builder
-	${INFO} "Copying artefacts to target folder..."
+	${CHECK} $(DEV_CONTEXT) docker/dev/docker-compose.yml builder
+	${INFO} "Copying artifacts to target folder..."
 	@ docker cp $$(docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml ps -q builder):/wheelhouse/. target
-	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml rm -f -v builder
 	${INFO} "Build complete"
 
 release: 
 	${INFO} "Pulling latest images..."
-	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml pull
+	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml pull test
 	${INFO} "Building images..."
-	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml build --pull
+	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml build app
+	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml build agent
+	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml build static
 	${INFO} "Ensuring database is ready..."
 	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml run --rm agent
 	${INFO} "Running database migrations..."
@@ -48,7 +56,7 @@ release:
 	${INFO} "Running acceptance tests..."
 	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml up test
 	@ docker cp $$(docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml ps -q test):/reports/. reports
-	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml rm -f -v test
+	${CHECK} $(RELEASE_CONTEXT) docker/release/docker-compose.yml test
 	${INFO} "Acceptance testing complete"
 
 clean:
@@ -88,14 +96,20 @@ publish:
 	${INFO} "Publish complete"
 
 # Cosmetics
-YELLOW = "\033[1;33m"
-NC = "\033[0m"
+YELLOW := "\033[1;33m"
+NC := "\033[0m"
 
 # Shell Functions
-INFO=@sh -c '\
+INFO := @sh -c '\
   printf $(YELLOW); \
   echo "=> $$1"; \
   printf $(NC)' INFO
+
+INSPECT := $$(docker-compose -p $$1 -f $$2 ps -q $$3 | xargs -I ARGS docker inspect -f "{{ .State.ExitCode }}" ARGS)
+
+CHECK := @sh -c '\
+	if [[ $(INSPECT) -ne 0 ]]; \
+	then exit $(INSPECT); fi' CHECK
 
 # Extract run arguments
 ifeq (compose,$(firstword $(MAKECMDGOALS)))
