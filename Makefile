@@ -67,7 +67,7 @@ clean:
 	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml kill
 	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml rm -f -v
 	${INFO} "Removing dangling images..."
-	@ docker images -q --filter "label=application=$(PROJECT_NAME)" --filter "dangling=true" | xargs -I ARGS docker rmi ARGS
+	@ docker images -q --filter "label=application=$(PROJECT_NAME)" --filter "dangling=true" | xargs -I ARGS docker rmi -f ARGS
 	${INFO} "Clean complete"
 
 compose:
