@@ -16,6 +16,8 @@ NOSE_ARGS = [
   '--xunit-file=%s/unittests.xml' % TEST_OUTPUT_DIR,     
   '--cover-xml',                    # produce XML coverage info
   '--cover-xml-file=%s/coverage.xml' % TEST_OUTPUT_DIR,  
+  '--cover-html',
+  '--cover-html-dir=%s/html' % TEST_OUTPUT_DIR
 ]
 
 # Database
