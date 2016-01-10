@@ -4,6 +4,8 @@ venv
 *egg-info
 .coverage
 target
+reports
 coverage.xml
 unittests.xml
 acceptance.xml
+src/html
