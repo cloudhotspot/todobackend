@@ -7,5 +7,7 @@ target
 reports
 coverage.xml
 unittests.xml
+unittests.html
 acceptance.xml
 src/html
+

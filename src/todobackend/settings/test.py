@@ -17,7 +17,9 @@ NOSE_ARGS = [
   '--cover-xml',                    # produce XML coverage info
   '--cover-xml-file=%s/coverage.xml' % TEST_OUTPUT_DIR,  
   '--cover-html',
-  '--cover-html-dir=%s/html' % TEST_OUTPUT_DIR
+  '--cover-html-dir=%s/html' % TEST_OUTPUT_DIR,
+  '--with-html',
+  '--html-file=%s/unittests.html' % TEST_OUTPUT_DIR
 ]
 
 # Database

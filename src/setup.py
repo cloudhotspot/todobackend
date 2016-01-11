@@ -20,6 +20,7 @@ setup (
                               "pinocchio>=0.4.2",
                               "colorama>=0.3.3",
                               "coverage>=4.0.2",
+                              "nose-htmloutput>=0.6.0"
                             ],
                          },
 )
