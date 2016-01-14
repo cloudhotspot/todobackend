@@ -5,10 +5,10 @@ LABEL application="todobackend"
 # Expose port 8000
 EXPOSE 8000
 
-# Mount point for application artefacts
+# Mount point for application artifacts
 COPY target /wheelhouse
 
-# Install application artefacts
+# Install application artifacts
 RUN . /appenv/bin/activate && \
-    pip install --no-index -f wheelhouse todobackend && \
+    pip install --no-index -f /wheelhouse todobackend && \
     rm -rf /wheelhouse
