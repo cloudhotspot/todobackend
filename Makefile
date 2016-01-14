@@ -43,10 +43,11 @@ build:
 release: 
 	${INFO} "Pulling latest images..."
 	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml pull test
+	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml pull nginx
 	${INFO} "Building images..."
 	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml build app
 	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml build agent
-	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml build static
+	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml build webroot
 	${INFO} "Ensuring database is ready..."
 	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml run --rm agent
 	${INFO} "Running database migrations..."

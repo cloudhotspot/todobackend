@@ -3,16 +3,23 @@ app:
   dockerfile: docker/release/Dockerfile
   links:
     - db
-  ports:
-    - 8000:8000
+  # ports:
+  #   - 8000:8000
   volumes_from:
-    - static
-  command: ["uwsgi","--http :8000","--module todobackend.wsgi","--master","--static-map /static=/var/www/todobackend/static"]
+    - webroot  
   environment:
     DJANGO_SETTINGS_MODULE: todobackend.settings.release
     MYSQL_HOST: db
     MYSQL_USER: todo
     MYSQL_PASSWORD: password
+  command: 
+    - "uwsgi"
+    - "--socket /var/www/todobackend/todobackend.sock"
+    - "--chmod-socket=666"
+    - "--module todobackend.wsgi"
+    - "--master"
+    - "--static-map /static=/var/www/todobackend/static"
+    - "--die-on-term"
 
 db:
   image: mysql
@@ -25,6 +32,15 @@ db:
     MYSQL_PASSWORD: password
     MYSQL_ROOT_PASSWORD: password
 
+nginx:
+  image: nginx
+  ports: 
+    - "8000:8000"
+  volumes:
+    - ./nginx.conf:/etc/nginx/conf.d/todobackend_nginx.conf
+  volumes_from: 
+    - webroot
+
 agent:
   build: ../../
   dockerfile: docker/agent/Dockerfile
@@ -34,7 +50,7 @@ agent:
     PROBE_HOST: "db"
     PROBE_PORT: "3306"
 
-static:
+webroot:
   build: ../../
   dockerfile: docker/release/Dockerfile
   volumes:
@@ -45,8 +61,9 @@ test:
   image: cloudhotspot/todobackend-specs
   links:
     - app
+    - nginx
   environment:
-    URL: http://app:8000/todos
+    URL: http://nginx:8000/todos
     JUNIT_REPORT_PATH: /reports/acceptance.xml
     JUNIT_REPORT_STACK: 1
   command: --reporter mocha-jenkins-reporter
