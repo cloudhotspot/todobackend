@@ -3,8 +3,6 @@ app:
   dockerfile: docker/release/Dockerfile
   links:
     - db
-  # ports:
-  #   - 8000:8000
   volumes_from:
     - webroot  
   environment:
@@ -13,7 +11,7 @@ app:
     MYSQL_USER: todo
     MYSQL_PASSWORD: password
   command: 
-    - "uwsgi"
+    - uwsgi
     - "--socket /var/www/todobackend/todobackend.sock"
     - "--chmod-socket=666"
     - "--module todobackend.wsgi"
@@ -36,10 +34,12 @@ nginx:
   image: nginx
   ports: 
     - "8000:8000"
-  volumes:
-    - ./nginx.conf:/etc/nginx/conf.d/todobackend_nginx.conf
   volumes_from: 
     - webroot
+    - nginx-config
+
+nginx-config:
+  image: cloudhotspot/todobackend-nginx-config
 
 agent:
   build: ../../
