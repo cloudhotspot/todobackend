@@ -16,7 +16,6 @@ app:
     - "--chmod-socket=666"
     - "--module todobackend.wsgi"
     - "--master"
-    - "--static-map /static=/var/www/todobackend/static"
     - "--die-on-term"
 
 db:
@@ -32,14 +31,12 @@ db:
 
 nginx:
   image: nginx
+  volumes:
+    - ./todobackend.conf:/etc/nginx/conf.d/todobackend.conf
   ports: 
     - "8000:8000"
   volumes_from: 
     - webroot
-    - nginx-config
-
-nginx-config:
-  image: cloudhotspot/todobackend-nginx-config
 
 agent:
   build: ../../
