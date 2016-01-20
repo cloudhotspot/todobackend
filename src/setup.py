@@ -22,5 +22,6 @@ setup (
                               "coverage>=4.0.2",
                               "nose-htmloutput>=0.6.0"
                             ],
+                            "aws": ["credstash"]
                          },
 )

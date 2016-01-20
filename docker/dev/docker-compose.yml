@@ -46,4 +46,4 @@ builder:
   volumes_from:
     - cache
   entrypoint: "entrypoint.sh"
-  command: ["pip", "wheel", "."]
+  command: ["pip", "wheel", ".[aws]"]

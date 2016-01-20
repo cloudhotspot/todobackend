@@ -10,5 +10,5 @@ COPY target /wheelhouse
 
 # Install application artifacts
 RUN . /appenv/bin/activate && \
-    pip install --no-index -f /wheelhouse todobackend && \
+    pip install --no-index -f /wheelhouse todobackend[aws] && \
     rm -rf /wheelhouse
