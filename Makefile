@@ -3,12 +3,11 @@ ORG_NAME ?= cloudhotspot
 REPO_NAME ?= todobackend
 
 # Use this setting to specify a custom Docker registry
-# Must specify a trailing /
-# DOCKER_REGISTRY ?= registry.domain.tld/myrepos/
+DOCKER_REGISTRY ?= docker.io
 
 # Computed variables
-RELEASE_CONTEXT = $(PROJECT_NAME)$(BUILD_ID)
-DEV_CONTEXT = $(RELEASE_CONTEXT)dev
+RELEASE_CONTEXT := $(PROJECT_NAME)$(BUILD_ID)
+DEV_CONTEXT := $(RELEASE_CONTEXT)dev
 
 # Tagging: this must match the release environment application service in docker/release/docker-compose.yml
 APP_NAME ?= app
@@ -75,7 +74,7 @@ compose:
 
 tag:
 	${INFO} "Tagging release image with tags $(TAG_ARGS)..."
-	@ $(foreach tag,$(TAG_ARGS), docker tag -f $(RELEASE_CONTEXT)_$(APP_NAME) $(DOCKER_REGISTRY)$(ORG_NAME)/$(REPO_NAME):$(tag);)
+	@ $(foreach tag,$(TAG_ARGS), docker tag -f $(RELEASE_CONTEXT)_$(APP_NAME) $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME):$(tag);)
 	${INFO} "Tagging complete"
 
 login:
@@ -89,26 +88,32 @@ logout:
 	${INFO} "Logged out of Docker registry $$DOCKER_REGISTRY"	
 
 publish:
-	${INFO} "Publishing tags $(PUBLISH_ARGS) for release image $(ORG_NAME)/$(REPO_NAME)..."; 
-	@ $(foreach tag,$(PUBLISH_ARGS), docker push $(ORG_NAME)/$(REPO_NAME):$(tag);)
-	@ $(if $(PUBLISH_ARGS),, docker push $(ORG_NAME)/$(REPO_NAME))
+	${INFO} "Publishing tags $(PUBLISH_ARGS) for release image $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME)..."; 
+	@ $(foreach tag,$(PUBLISH_ARGS), docker push $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME):$(tag);)
+	@ $(if $(PUBLISH_ARGS),, docker push $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME))
 	${INFO} "Publish complete"
 
 # Cosmetics
-YELLOW := "\033[1;33m"
-NC := "\033[0m"
+YELLOW := "\e[1;33m"
+RED := "\e[1;31m"
+NC := "\e[0m"
 
 # Shell Functions
-INFO := @bash -c '\
-  printf $(YELLOW); \
-  echo "=> $$1"; \
-  printf $(NC)' INFO
+MSG := @bash -c '\
+  printf $$1; \
+  echo "=> $$2"; \
+  printf $(NC)' VALUE
+
+INFO := ${MSG} $(YELLOW)
+
+ERROR := ${MSG} $(RED)
+
 
 INSPECT := $$(docker-compose -p $$1 -f $$2 ps -q $$3 | xargs -I ARGS docker inspect -f "{{ .State.ExitCode }}" ARGS)
 
 CHECK := @bash -c '\
 	if [[ $(INSPECT) -ne 0 ]]; \
-	then exit $(INSPECT); fi' CHECK
+	then exit $(INSPECT); fi' VALUE
 
 # Extract run arguments
 ifeq (compose,$(firstword $(MAKECMDGOALS)))
