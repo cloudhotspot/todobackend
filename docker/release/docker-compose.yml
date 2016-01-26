@@ -30,9 +30,8 @@ db:
     MYSQL_ROOT_PASSWORD: password
 
 nginx:
-  image: nginx
-  volumes:
-    - ./todobackend.conf:/etc/nginx/conf.d/todobackend.conf
+  build: .
+  dockerfile: Dockerfile.nginx
   ports: 
     - "8000:8000"
   volumes_from: 

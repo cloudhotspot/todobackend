@@ -1,0 +1,4 @@
+FROM nginx
+MAINTAINER Justin Menga <justin.menga@gmail.com>
+
+COPY todobackend.conf /etc/nginx/conf.d/todobackend.conf
