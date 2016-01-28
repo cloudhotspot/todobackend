@@ -76,7 +76,7 @@ compose:
 
 tag:
 	${INFO} "Tagging release image with tags $(TAG_ARGS)..."
-	@ $(foreach tag,$(TAG_ARGS), docker tag -f $(RELEASE_CONTEXT)_$(APP_NAME) $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME):$(tag);)
+	@ $(foreach tag,$(TAG_ARGS), docker tag -f $(RELEASE_CONTEXT)_$(APP_NAME) $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME):$(patsubst "%",%,$(tag));)
 	${INFO} "Tagging complete"
 
 login:
@@ -109,7 +109,6 @@ MSG := @bash -c '\
 INFO := ${MSG} $(YELLOW)
 
 ERROR := ${MSG} $(RED)
-
 
 INSPECT := $$(docker-compose -p $$1 -f $$2 ps -q $$3 | xargs -I ARGS docker inspect -f "{{ .State.ExitCode }}" ARGS)
 
