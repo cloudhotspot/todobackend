@@ -128,7 +128,7 @@ ifeq (tag,$(firstword $(MAKECMDGOALS)))
   ifeq ($(TAG_ARGS),)
   	$(error You must specify a tag)
   endif
-
+  $(eval $(TAG_ARGS):;@:)
 endif
 
 # Extract push arguments
