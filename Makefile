@@ -12,7 +12,7 @@ DEV_CONTEXT := $(RELEASE_CONTEXT)dev
 # Tagging: this must match the release environment application service in docker/release/docker-compose.yml
 APP_NAME ?= app
 
-.PHONY: test build release clean compose tag login logout publish $(MAKECMDGOALS)
+.PHONY: test build release clean compose tag login logout publish
 
 test:
 	${INFO} "Pulling latest images..."
@@ -76,7 +76,7 @@ compose:
 
 tag:
 	${INFO} "Tagging release image with tags $(TAG_ARGS)..."
-	@ $(foreach tag,$(shell echo $(TAG_ARGS)), docker tag -f $(RELEASE_CONTEXT)_$(APP_NAME) $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME):$(tag);)
+	@ $(foreach tag,$(TAG_ARGS), docker tag -f $(RELEASE_CONTEXT)_$(APP_NAME) $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME):$(tag);)
 	${INFO} "Tagging complete"
 
 login:
