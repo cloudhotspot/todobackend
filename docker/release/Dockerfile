@@ -11,5 +11,5 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Install application artifacts
 RUN . /appenv/bin/activate && \
-    pip install --no-index -f /wheelhouse todobackend[aws] && \
+    pip install --no-index -f /wheelhouse todobackend && \
     rm -rf /wheelhouse

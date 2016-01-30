@@ -26,6 +26,7 @@ cache:
   dockerfile: docker/dev/Dockerfile
   volumes:
     - /tmp/cache:/cache
+    - /build
   entrypoint: "true"
 
 
@@ -46,4 +47,4 @@ builder:
   volumes_from:
     - cache
   entrypoint: "entrypoint.sh"
-  command: ["pip", "wheel", ".[aws]"]
+  command: ["pip", "wheel", "--no-index", "-f /build", "."]

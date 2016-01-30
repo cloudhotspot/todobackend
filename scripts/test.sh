@@ -1,5 +1,12 @@
 #!/bin/bash
 # Activate virtual environment
 . /appenv/bin/activate
-pip install -r requirements_test.txt
+
+# Download requirments to build cache
+pip download -d /build -r requirements_test.txt --no-input
+
+# Install application test requirements from build cache
+pip install --no-index -f /build -r requirements_test.txt
+
+# Run test.sh arguments
 exec $@
