@@ -157,9 +157,3 @@ ifeq (buildtag,$(firstword $(MAKECMDGOALS)))
   endif
   $(eval $(BUILDTAG_ARGS):;@:)
 endif
-
-# Extract push arguments
-ifeq (publish, $(firstword $(MAKECMDGOALS)))
-  PUBLISH_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
-  $(eval $(PUBLISH_ARGS):;@:)
-endif
