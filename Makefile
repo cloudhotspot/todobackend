@@ -12,7 +12,16 @@ DEV_CONTEXT := $(RELEASE_CONTEXT)dev
 # Tagging: this must match the release environment application service in docker/release/docker-compose.yml
 APP_NAME ?= app
 
-.PHONY: test build release clean compose tag login logout publish
+# Build tag expression - can be used to evaulate a shell expression at runtime
+BUILD_TAG_EXPRESSION ?= date +%Y%m%d%H%M%S
+
+# Execute shell expression
+BUILD_EXPRESSION = $(shell $(BUILD_TAG_EXPRESSION))
+
+# Build tag - defaults to BUILD_EXPRESSION if not defined
+BUILD_TAG ?= $(BUILD_EXPRESSION)
+
+.PHONY: test build release clean compose tag buildtag login logout publish
 
 test:
 	${INFO} "Pulling latest images..."
@@ -58,6 +67,7 @@ release:
 	@ docker cp $$(docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml ps -q test):/reports/. reports
 	${CHECK} $(RELEASE_CONTEXT) docker/release/docker-compose.yml test
 	${INFO} "Acceptance testing complete"
+	echo $(REPOEXPR)
 
 clean:
 	${INFO} "Destroying development environment..."
@@ -79,6 +89,11 @@ tag:
 	@ $(foreach tag,$(TAG_ARGS), docker tag -f $(RELEASE_CONTEXT)_$(APP_NAME) $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME):$(tag);)
 	${INFO} "Tagging complete"
 
+buildtag:
+	${INFO} "Tagging release image with suffix $(BUILD_TAG) and build tags $(BUILDTAG_ARGS)..."
+	@ $(foreach tag,$(BUILDTAG_ARGS), docker tag -f $(RELEASE_CONTEXT)_$(APP_NAME) $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME):$(tag).$(BUILD_TAG);)
+	${INFO} "Tagging complete"
+
 login:
 	${INFO} "Logging in to Docker registry $(DOCKER_REGISTRY)..."
 	@ docker login -u $$DOCKER_USER -p $$DOCKER_PASSWORD -e $$DOCKER_EMAIL $(DOCKER_REGISTRY)
@@ -90,9 +105,8 @@ logout:
 	${INFO} "Logged out of Docker registry $$DOCKER_REGISTRY"	
 
 publish:
-	${INFO} "Publishing tags $(PUBLISH_ARGS) for release image $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME)..."; 
-	@ $(foreach tag,$(PUBLISH_ARGS), docker push $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME):$(tag);)
-	@ $(if $(PUBLISH_ARGS),, docker push $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME))
+	${INFO} "Publishing release image $(IMAGE_ID) to $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME)..."; 
+	@ $(foreach tag,$(shell echo $(REPOEXPR)), docker push $(tag);)
 	${INFO} "Publish complete"
 
 # Cosmetics
@@ -112,6 +126,10 @@ ERROR := ${MSG} $(RED)
 
 INSPECT := $$(docker-compose -p $$1 -f $$2 ps -q $$3 | xargs -I ARGS docker inspect -f "{{ .State.ExitCode }}" ARGS)
 
+IMAGE_ID := $$(docker inspect -f '{{ .Image }}' $$(docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml ps -q app))
+
+REPOEXPR := $$(docker inspect -f '{{range .RepoTags}}{{.}} {{end}}' $(IMAGE_ID) | grep -oh "$(ORG_NAME)/$(REPO_NAME)[^[:space:]|\$$]*" | xargs -I ARGS)
+
 CHECK := @bash -c '\
 	if [[ $(INSPECT) -ne 0 ]]; \
 	then exit $(INSPECT); fi' VALUE
@@ -129,6 +147,15 @@ ifeq (tag,$(firstword $(MAKECMDGOALS)))
   	$(error You must specify a tag)
   endif
   $(eval $(TAG_ARGS):;@:)
+endif
+
+# Extract build tag arguments
+ifeq (buildtag,$(firstword $(MAKECMDGOALS)))
+	BUILDTAG_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  ifeq ($(BUILDTAG_ARGS),)
+  	$(error You must specify a tag)
+  endif
+  $(eval $(BUILDTAG_ARGS):;@:)
 endif
 
 # Extract push arguments
