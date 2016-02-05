@@ -2,6 +2,8 @@ FROM cloudhotspot/todobackend-base:latest
 MAINTAINER Justin Menga <justin.menga@gmail.com>
 LABEL application="todobackend"
 
+RUN sed -i "s/http:\/\/archive./http:\/\/nz.archive./g" /etc/apt/sources.list
+
 # Mount point for application artifacts
 COPY target /wheelhouse
 
