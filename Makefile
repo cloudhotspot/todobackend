@@ -13,7 +13,7 @@ DEV_CONTEXT := $(RELEASE_CONTEXT)dev
 APP_NAME ?= app
 
 # Build tag expression - can be used to evaulate a shell expression at runtime
-BUILD_TAG_EXPRESSION ?= date +%Y%m%d%H%M%S
+BUILD_TAG_EXPRESSION ?= date -u +%Y%m%d%H%M%S
 
 # Execute shell expression
 BUILD_EXPRESSION = $(shell $(BUILD_TAG_EXPRESSION))
@@ -67,7 +67,6 @@ release:
 	@ docker cp $$(docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml ps -q test):/reports/. reports
 	${CHECK} $(RELEASE_CONTEXT) docker/release/docker-compose.yml test
 	${INFO} "Acceptance testing complete"
-	echo $(REPOEXPR)
 
 clean:
 	${INFO} "Destroying development environment..."
@@ -86,12 +85,12 @@ compose:
 
 tag:
 	${INFO} "Tagging release image with tags $(TAG_ARGS)..."
-	@ $(foreach tag,$(TAG_ARGS), docker tag -f $(RELEASE_CONTEXT)_$(APP_NAME) $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME):$(tag);)
+	@ $(foreach tag,$(TAG_ARGS), docker tag $(RELEASE_CONTEXT)_$(APP_NAME) $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME):$(tag);)
 	${INFO} "Tagging complete"
 
 buildtag:
 	${INFO} "Tagging release image with suffix $(BUILD_TAG) and build tags $(BUILDTAG_ARGS)..."
-	@ $(foreach tag,$(BUILDTAG_ARGS), docker tag -f $(RELEASE_CONTEXT)_$(APP_NAME) $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME):$(tag).$(BUILD_TAG);)
+	@ $(foreach tag,$(BUILDTAG_ARGS), docker tag $(RELEASE_CONTEXT)_$(APP_NAME) $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME):$(tag).$(BUILD_TAG);)
 	${INFO} "Tagging complete"
 
 login:
