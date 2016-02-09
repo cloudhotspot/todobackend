@@ -127,7 +127,7 @@ INSPECT := $$(docker-compose -p $$1 -f $$2 ps -q $$3 | xargs -I ARGS docker insp
 
 IMAGE_ID := $$(docker inspect -f '{{ .Image }}' $$(docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml ps -q app))
 
-REPOEXPR := $$(docker inspect -f '{{range .RepoTags}}{{.}} {{end}}' $(IMAGE_ID) | grep -oh "$(ORG_NAME)/$(REPO_NAME)[^[:space:]|\$$]*" | xargs -I ARGS)
+REPOEXPR := $$(docker inspect -f '{{range .RepoTags}}{{.}} {{end}}' $(IMAGE_ID) | grep -oh "$(ORG_NAME)/$(REPO_NAME)[^[:space:]|\$$]*" | xargs)
 
 CHECK := @bash -c '\
 	if [[ $(INSPECT) -ne 0 ]]; \
