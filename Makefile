@@ -2,8 +2,12 @@ PROJECT_NAME ?= todobackend
 ORG_NAME ?= cloudhotspot
 REPO_NAME ?= todobackend
 
-# Use this setting to specify a custom Docker registry
+# Use these settings to specify a custom Docker registry
 DOCKER_REGISTRY ?= docker.io
+
+# WARNING: Set DOCKER_REGISTRY_AUTH to empty for Docker Hub
+# Set DOCKER_REGISTRY_AUTH to auth endpoint for private Docker registry
+DOCKER_REGISTRY_AUTH ?= 
 
 # Computed variables
 RELEASE_CONTEXT := $(PROJECT_NAME)$(BUILD_ID)
@@ -94,9 +98,9 @@ buildtag:
 	${INFO} "Tagging complete"
 
 login:
-	${INFO} "Logging in to Docker registry $(DOCKER_REGISTRY)..."
-	@ docker login -u $$DOCKER_USER -p $$DOCKER_PASSWORD -e $$DOCKER_EMAIL $(DOCKER_REGISTRY)
-	${INFO} "Logged in to Docker registry $(DOCKER_REGISTRY)"
+	${INFO} "Logging in to Docker registry $(DOCKER_REGISTRY_AUTH)..."
+	docker login -u $$DOCKER_USER -p $$DOCKER_PASSWORD -e $$DOCKER_EMAIL $(DOCKER_REGISTRY_AUTH)
+	${INFO} "Logged in to Docker registry $(DOCKER_REGISTRY_AUTH)"
 
 logout:
 	${INFO} "Logging out of Docker registry $$DOCKER_REGISTRY..."
