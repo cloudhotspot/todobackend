@@ -1,0 +1,64 @@
+version: '2'
+volumes:
+  cache:
+    external: true
+  build:
+    driver: local
+services:
+  test:
+    build: 
+      context: ../../
+      dockerfile: docker/dev/Dockerfile
+    links:
+      - db
+    volumes:
+      - cache:/cache
+      - build:/build
+    environment:
+      DJANGO_SETTINGS_MODULE: todobackend.settings.test
+      MYSQL_HOST: db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: password
+      NOSE_INCLUDE_EXE: 1
+      TEST_OUTPUT_DIR: /reports
+
+  db:
+    image: mysql
+    hostname: db
+    expose:
+      - "3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+
+  # cache:
+  #   build: 
+  #     context: ../../
+  #     dockerfile: docker/dev/Dockerfile
+  #   volumes:
+  #     - /tmp/cache:/cache
+  #     - /build
+  #   entrypoint: "true"
+
+
+  agent:
+    build: 
+      context: ../../
+      dockerfile: docker/dev/Dockerfile
+    links:
+      - db
+    environment:
+      PROBE_HOST: "db"
+      PROBE_PORT: "3306"
+
+  builder:
+    build: 
+      context: ../../
+      dockerfile: docker/dev/Dockerfile
+    volumes:
+      - /wheelhouse
+      - cache:/cache
+      - build:/build
+    # volumes_from:
+    #   - cache
+    entrypoint: "entrypoint.sh"
+    command: ["pip", "wheel", "--no-index", "-f /build", "."]

@@ -5,6 +5,11 @@ REPO_NAME ?= todobackend
 # Use these settings to specify a custom Docker registry
 DOCKER_REGISTRY ?= docker.io
 
+# WARNING: Set DOCKER_REGISTRY_DISPLAY to empty for Docker Hub
+# Otherwise generally set to DOCKER_REGISTRY
+DOCKER_REGISTRY_DISPLAY ?= 
+
+
 # WARNING: Set DOCKER_REGISTRY_AUTH to empty for Docker Hub
 # Set DOCKER_REGISTRY_AUTH to auth endpoint for private Docker registry
 DOCKER_REGISTRY_AUTH ?= 
@@ -12,89 +17,101 @@ DOCKER_REGISTRY_AUTH ?=
 # Computed variables
 RELEASE_CONTEXT := $(PROJECT_NAME)$(BUILD_ID)
 DEV_CONTEXT := $(RELEASE_CONTEXT)dev
+DEV_COMPOSE_FILE := docker/dev/docker-compose-v2.yml
+REL_COMPOSE_FILE := docker/release/docker-compose.yml
 
-# Tagging: this must match the release environment application service in docker/release/docker-compose.yml
+# The name of the service in the Docker Compose release environment
+# that represents the release image to be tagged and published 
+# This must be set accurately for tagging and publshing functionality
 APP_NAME ?= app
 
 # Build tag expression - can be used to evaulate a shell expression at runtime
 BUILD_TAG_EXPRESSION ?= date -u +%Y%m%d%H%M%S
 
 # Execute shell expression
-BUILD_EXPRESSION = $(shell $(BUILD_TAG_EXPRESSION))
+BUILD_EXPRESSION := $(shell $(BUILD_TAG_EXPRESSION))
 
 # Build tag - defaults to BUILD_EXPRESSION if not defined
 BUILD_TAG ?= $(BUILD_EXPRESSION)
 
-.PHONY: test build release clean compose tag buildtag login logout publish
+.PHONY: test build release clean compose dcompose tag buildtag login logout publish
 
 test:
+	${INFO} "Creating cache volume..."
+	@ docker volume create --name cache
 	${INFO} "Pulling latest images..."
-	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml pull
+	@ docker-compose -p $(DEV_CONTEXT) -f $(DEV_COMPOSE_FILE) pull
 	${INFO} "Building images..."
-	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml build --pull test
-	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml build --pull agent
-	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml build cache
+	@ docker-compose -p $(DEV_CONTEXT) -f $(DEV_COMPOSE_FILE) build --pull test
+	@ docker-compose -p $(DEV_CONTEXT) -f $(DEV_COMPOSE_FILE) build --pull agent
+#	@ docker-compose -p $(DEV_CONTEXT) -f $(DEV_COMPOSE_FILE) build cache
 	${INFO} "Ensuring database is ready..."
-	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml run --rm agent
+	@ docker-compose -p $(DEV_CONTEXT) -f $(DEV_COMPOSE_FILE) run --rm agent
 	${INFO} "Running tests..."
-	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml up test
-	@ docker cp $$(docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml ps -q test):/reports/. reports;
-	${CHECK} $(DEV_CONTEXT) docker/dev/docker-compose.yml test
+	@ docker-compose -p $(DEV_CONTEXT) -f $(DEV_COMPOSE_FILE) up test
+	@ docker cp $$(docker-compose -p $(DEV_CONTEXT) -f $(DEV_COMPOSE_FILE) ps -q test):/reports/. reports;
+	${CHECK} $(DEV_CONTEXT) $(DEV_COMPOSE_FILE) test
 	${INFO} "Testing complete"
 
 build:
 	${INFO} "Creating builder image..."
-	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml build builder
+	@ docker-compose -p $(DEV_CONTEXT) -f $(DEV_COMPOSE_FILE) build builder
 	${INFO} "Building application artifacts..."
-	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml up builder
-	${CHECK} $(DEV_CONTEXT) docker/dev/docker-compose.yml builder
+	@ docker-compose -p $(DEV_CONTEXT) -f $(DEV_COMPOSE_FILE) up builder
+	${CHECK} $(DEV_CONTEXT) $(DEV_COMPOSE_FILE) builder
 	${INFO} "Copying artifacts to target folder..."
-	@ docker cp $$(docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml ps -q builder):/wheelhouse/. target
+	@ docker cp $$(docker-compose -p $(DEV_CONTEXT) -f $(DEV_COMPOSE_FILE) ps -q builder):/wheelhouse/. target
 	${INFO} "Build complete"
 
 release: 
 	${INFO} "Pulling latest images..."
-	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml pull test
+	@ docker-compose -p $(RELEASE_CONTEXT) -f $(REL_COMPOSE_FILE) pull test
 	${INFO} "Building images..."
-	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml build --pull nginx
-	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml build app
-	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml build webroot
-	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml build agent
+	@ docker-compose -p $(RELEASE_CONTEXT) -f $(REL_COMPOSE_FILE) build --pull nginx
+	@ docker-compose -p $(RELEASE_CONTEXT) -f $(REL_COMPOSE_FILE) build app
+	@ docker-compose -p $(RELEASE_CONTEXT) -f $(REL_COMPOSE_FILE) build webroot
+	@ docker-compose -p $(RELEASE_CONTEXT) -f $(REL_COMPOSE_FILE) build agent
 	${INFO} "Ensuring database is ready..."
-	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml run --rm agent
+	@ docker-compose -p $(RELEASE_CONTEXT) -f $(REL_COMPOSE_FILE) run --rm agent
 	${INFO} "Running database migrations..."
-	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml run --rm app manage.py migrate
+	@ docker-compose -p $(RELEASE_CONTEXT) -f $(REL_COMPOSE_FILE) run --rm app manage.py migrate
 	${INFO} "Collecting static files..."
-	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml run --rm app manage.py collectstatic --noinput
+	@ docker-compose -p $(RELEASE_CONTEXT) -f $(REL_COMPOSE_FILE) run --rm app manage.py collectstatic --noinput
 	${INFO} "Running acceptance tests..."
-	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml up test
-	@ docker cp $$(docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml ps -q test):/reports/. reports
-	${CHECK} $(RELEASE_CONTEXT) docker/release/docker-compose.yml test
+	@ docker-compose -p $(RELEASE_CONTEXT) -f $(REL_COMPOSE_FILE) up test
+	@ docker cp $$(docker-compose -p $(RELEASE_CONTEXT) -f $(REL_COMPOSE_FILE) ps -q test):/reports/. reports
+	${CHECK} $(RELEASE_CONTEXT) $(REL_COMPOSE_FILE) test
 	${INFO} "Acceptance testing complete"
 
 clean:
 	${INFO} "Destroying development environment..."
-	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml kill
-	@ docker-compose -p $(DEV_CONTEXT) -f docker/dev/docker-compose.yml rm -f -v
+	@ docker-compose -p $(DEV_CONTEXT) -f $(DEV_COMPOSE_FILE) down -v
+#	@ docker-compose -p $(DEV_CONTEXT) -f $(DEV_COMPOSE_FILE) kill
+#	@ docker-compose -p $(DEV_CONTEXT) -f $(DEV_COMPOSE_FILE) rm -f -v
 	${INFO} "Destroying release environment..."
-	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml kill
-	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml rm -f -v
-	${INFO} "Removing dangling images..."
+	@ docker-compose -p $(RELEASE_CONTEXT) -f $(REL_COMPOSE_FILE) down -v
+#	@ docker-compose -p $(RELEASE_CONTEXT) -f $(REL_COMPOSE_FILE) kill
+# @ docker-compose -p $(RELEASE_CONTEXT) -f $(REL_COMPOSE_FILE) rm -f -v
+	 
 	@ docker images -q --filter "label=application=$(PROJECT_NAME)" --filter "dangling=true" | xargs -I ARGS docker rmi -f ARGS
 	${INFO} "Clean complete"
 
 compose:
 	${INFO} "Running docker-compose command..."
-	@ docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml $(COMPOSE_ARGS)
+	@ docker-compose -p $(RELEASE_CONTEXT) -f $(REL_COMPOSE_FILE) $(COMPOSE_ARGS)
+
+dcompose:
+	${INFO} "Running docker-compose command..."
+	docker-compose -p $(DEV_CONTEXT) -f $(DEV_COMPOSE_FILE) $(DCOMPOSE_ARGS)
 
 tag:
 	${INFO} "Tagging release image with tags $(TAG_ARGS)..."
-	@ $(foreach tag,$(TAG_ARGS), docker tag -f $(RELEASE_CONTEXT)_$(APP_NAME) $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME):$(tag);)
+	@ $(foreach tag,$(TAG_ARGS), docker tag $(IMAGE_ID) $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME):$(tag);)
 	${INFO} "Tagging complete"
 
 buildtag:
 	${INFO} "Tagging release image with suffix $(BUILD_TAG) and build tags $(BUILDTAG_ARGS)..."
-	@ $(foreach tag,$(BUILDTAG_ARGS), docker tag -f $(RELEASE_CONTEXT)_$(APP_NAME) $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME):$(tag).$(BUILD_TAG);)
+	@ $(foreach tag,$(BUILDTAG_ARGS), docker tag $(IMAGE_ID) $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME):$(tag).$(BUILD_TAG);)
 	${INFO} "Tagging complete"
 
 login:
@@ -126,12 +143,19 @@ MSG := @bash -c '\
 INFO := ${MSG} $(YELLOW)
 
 ERROR := ${MSG} $(RED)
-
+ 
 INSPECT := $$(docker-compose -p $$1 -f $$2 ps -q $$3 | xargs -I ARGS docker inspect -f "{{ .State.ExitCode }}" ARGS)
 
-IMAGE_ID := $$(docker inspect -f '{{ .Image }}' $$(docker-compose -p $(RELEASE_CONTEXT) -f docker/release/docker-compose.yml ps -q app))
+IMAGE_ID := $$(docker inspect -f '{{ .Image }}' $$(docker-compose -p $(RELEASE_CONTEXT) -f $(REL_COMPOSE_FILE) ps -q $(APP_NAME)))
 
-REPOEXPR := $$(docker inspect -f '{{range .RepoTags}}{{.}} {{end}}' $(IMAGE_ID) | grep -oh "$(ORG_NAME)/$(REPO_NAME)[^[:space:]|\$$]*" | xargs)
+# Repository Filter
+ifeq ($(DOCKER_REGISTRY), docker.io)
+	REPO_FILTER := $(ORG_NAME)/$(REPO_NAME)[^[:space:]|\$$]*
+else
+	REPO_FILTER := $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME)[^[:space:]|\$$]*
+endif
+
+REPOEXPR := $$(docker inspect -f '{{range .RepoTags}}{{.}} {{end}}' $(IMAGE_ID) | grep -oh "$(REPO_FILTER)" | xargs)
 
 CHECK := @bash -c '\
 	if [[ $(INSPECT) -ne 0 ]]; \
@@ -141,6 +165,11 @@ CHECK := @bash -c '\
 ifeq (compose,$(firstword $(MAKECMDGOALS)))
   COMPOSE_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
   $(eval $(COMPOSE_ARGS):;@:)
+endif
+
+ifeq (dcompose,$(firstword $(MAKECMDGOALS)))
+  DCOMPOSE_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  $(eval $(DCOMPOSE_ARGS):;@:)
 endif
 
 # Extract tag arguments
